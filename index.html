@@ -261,35 +261,89 @@
     .cloud-dot.online { background: var(--green); }
     .cloud-dot.offline { background: var(--red); }
 
-    .overview-table {
-      width: 100%;
-      border-collapse: collapse;
-      min-width: 760px;
+    .overview-tabs {
+      display: grid;
+      gap: 8px;
+      padding: 12px;
+      max-height: 520px;
+      overflow: auto;
     }
 
-    .table-scroll { overflow-x: auto; }
-
-    th, td {
-      padding: 12px 14px;
-      border-bottom: 1px solid var(--line);
-      text-align: left;
-      vertical-align: middle;
-      font-size: 14px;
-    }
-
-    th {
-      color: var(--muted);
+    .student-tab {
+      border: 1px solid var(--line);
+      border-radius: 8px;
       background: var(--surface-2);
-      font-size: 12px;
+      overflow: hidden;
     }
 
-    tr:last-child td { border-bottom: 0; }
+    .student-tab-button {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 38px minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+      padding: 11px 12px;
+      background: transparent;
+      color: var(--text);
+      text-align: left;
+    }
 
-    .student-cell {
+    .student-tab-button:hover,
+    .student-tab.open .student-tab-button {
+      background: #eef2f8;
+    }
+
+    .student-tab-main {
+      min-width: 0;
+    }
+
+    .student-tab-main strong {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .student-tab-summary {
       display: flex;
       align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+
+    .student-tab-panel {
+      display: none;
+      padding: 0 12px 12px 60px;
+    }
+
+    .student-tab.open .student-tab-panel {
+      display: grid;
       gap: 10px;
-      min-width: 190px;
+    }
+
+    .overview-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(120px, 1fr));
+      gap: 8px;
+    }
+
+    .overview-metric {
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: white;
+      padding: 10px;
+    }
+
+    .overview-metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 5px;
+      font-weight: 800;
+    }
+
+    .overview-metric strong {
+      font-size: 16px;
     }
 
     .bar {
@@ -305,6 +359,11 @@
       width: 0;
       background: linear-gradient(90deg, var(--blue), var(--green));
       border-radius: inherit;
+    }
+
+    .student-tab-panel .bar {
+      width: 100%;
+      max-width: 520px;
     }
 
     .status-pill {
@@ -586,14 +645,69 @@
 
     @media (max-width: 760px) {
       .app { display: block; }
-      .sidebar { min-height: 0; }
+      .sidebar {
+        min-height: 0;
+        padding: 14px 12px;
+        gap: 12px;
+      }
+      .brand strong { font-size: 16px; }
+      .search { padding: 10px; }
       .member-list {
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        max-height: 280px;
+        max-height: 220px;
       }
-      main { padding: 18px; }
+      .member {
+        grid-template-columns: 32px minmax(0, 1fr) auto;
+        gap: 7px;
+        padding: 8px 6px;
+      }
+      .avatar {
+        width: 32px;
+        height: 32px;
+        font-size: 12px;
+      }
+      .member-name {
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      main { padding: 12px; }
       .topbar { display: grid; }
-      .stats { grid-template-columns: 1fr; }
+      h1 { font-size: 24px; }
+      .lead { font-size: 13px; }
+      .stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+      .stat {
+        min-height: 78px;
+        padding: 12px;
+      }
+      .stat strong { font-size: 22px; }
+      .panel-head {
+        align-items: flex-start;
+        padding: 12px;
+      }
+      .overview-tabs {
+        padding: 8px;
+        max-height: 420px;
+      }
+      .student-tab-button {
+        grid-template-columns: 32px minmax(0, 1fr);
+        padding: 10px;
+      }
+      .student-tab-summary {
+        grid-column: 2;
+        justify-content: space-between;
+        width: 100%;
+      }
+      .student-tab-panel {
+        padding: 0 10px 10px 52px;
+      }
+      .overview-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .overview-metric { padding: 8px; }
+      .cloud-panel { padding: 12px; }
       .chapter-summary { grid-template-columns: 1fr; }
       .task { grid-template-columns: 28px 1fr; }
       .task input[type="date"],
@@ -659,21 +773,7 @@
             <button id="sortByDue" class="ghost">期限順</button>
           </div>
         </div>
-        <div class="table-scroll">
-          <table class="overview-table">
-            <thead>
-              <tr>
-                <th>サロン生</th>
-                <th>消化率</th>
-                <th>完了タスク</th>
-                <th>完了章</th>
-                <th>次の期限</th>
-                <th>状態</th>
-              </tr>
-            </thead>
-            <tbody id="overviewRows"></tbody>
-          </table>
-        </div>
+        <div id="overviewRows" class="overview-tabs"></div>
       </section>
 
       <div class="workspace">
@@ -733,6 +833,7 @@
     const DB_ROW_ID = "main";
     const colors = ["#2f6fed", "#14946f", "#c98211", "#9b5de5", "#d14f3f"];
     let overviewSort = "progress";
+    let openOverviewMemberId = "";
     let supabaseClient = null;
     let cloudReady = false;
     let remoteSaveTimer = null;
@@ -1615,15 +1716,30 @@ shota 平岩しょうた
         const doneChapters = member.chapters.filter(chapter => chapterCompletion(chapter).percent === 100).length;
         const due = nextDue(member);
         const status = memberStatus(member);
+        const isOpen = member.id === openOverviewMemberId;
         return `
-          <tr data-overview-member="${member.id}">
-            <td><div class="student-cell">${avatar(member)}<div><strong>${escapeHtml(member.name)}</strong><div class="member-note">${escapeHtml(member.note)}</div></div></div></td>
-            <td><div class="toolbar"><div class="bar"><div class="bar-fill" style="width:${progress.percent}%"></div></div><strong>${progress.percent}%</strong></div></td>
-            <td>${progress.done}/${progress.total}</td>
-            <td>${doneChapters}/${member.chapters.length}</td>
-            <td><span class="${dueClass(due) ? "due-note " + dueClass(due) : ""}">${dueText(due)}</span></td>
-            <td><span class="status-pill ${status.className}">${status.text}</span></td>
-          </tr>
+          <article class="student-tab ${isOpen ? "open" : ""}" data-overview-member="${member.id}">
+            <button class="student-tab-button" type="button" aria-expanded="${isOpen ? "true" : "false"}">
+              ${avatar(member)}
+              <span class="student-tab-main">
+                <strong>${escapeHtml(member.name)}</strong>
+                <span class="member-note">${escapeHtml(member.note)}</span>
+              </span>
+              <span class="student-tab-summary">
+                <span class="status-pill ${status.className}">${status.text}</span>
+                <strong>${progress.percent}%</strong>
+              </span>
+            </button>
+            <div class="student-tab-panel">
+              <div class="bar"><div class="bar-fill" style="width:${progress.percent}%"></div></div>
+              <div class="overview-grid">
+                <div class="overview-metric"><span>消化率</span><strong>${progress.percent}%</strong></div>
+                <div class="overview-metric"><span>完了タスク</span><strong>${progress.done}/${progress.total}</strong></div>
+                <div class="overview-metric"><span>完了章</span><strong>${doneChapters}/${member.chapters.length}</strong></div>
+                <div class="overview-metric"><span>次の期限</span><strong class="${dueClass(due) ? "due-note " + dueClass(due) : ""}">${dueText(due)}</strong></div>
+              </div>
+            </div>
+          </article>
         `;
       }).join("");
     }
@@ -1724,13 +1840,21 @@ shota 平岩しょうた
       const button = event.target.closest("[data-member-id]");
       if (!button) return;
       state.activeMemberId = button.dataset.memberId;
+      openOverviewMemberId = "";
       render();
     });
 
     overviewRows.addEventListener("click", event => {
-      const row = event.target.closest("[data-overview-member]");
-      if (!row) return;
-      state.activeMemberId = row.dataset.overviewMember;
+      const button = event.target.closest(".student-tab-button");
+      if (!button) return;
+      const tab = button.closest("[data-overview-member]");
+      if (!tab) return;
+      if (tab.classList.contains("open")) {
+        openOverviewMemberId = "";
+      } else {
+        openOverviewMemberId = tab.dataset.overviewMember;
+        state.activeMemberId = tab.dataset.overviewMember;
+      }
       render();
     });
 
