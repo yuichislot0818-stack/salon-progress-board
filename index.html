@@ -6,6 +6,7 @@
   <title>サロン進捗管理</title>
   <meta name="theme-color" content="#121821">
   <link rel="manifest" href="manifest.webmanifest">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
       --bg: #f5f7fb;
@@ -226,6 +227,39 @@
       margin-bottom: 16px;
       overflow: hidden;
     }
+
+    .cloud-panel {
+      display: grid;
+      gap: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .cloud-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto auto;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .cloud-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .cloud-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--amber);
+    }
+
+    .cloud-dot.online { background: var(--green); }
+    .cloud-dot.offline { background: var(--red); }
 
     .overview-table {
       width: 100%;
@@ -547,6 +581,7 @@
       .app { grid-template-columns: 230px 1fr; }
       .workspace { grid-template-columns: 1fr; }
       .stats { grid-template-columns: repeat(2, minmax(140px, 1fr)); }
+      .cloud-row { grid-template-columns: 1fr; }
     }
 
     @media (max-width: 760px) {
@@ -596,6 +631,25 @@
       </div>
 
       <section id="stats" class="stats"></section>
+
+      <section class="panel cloud-panel">
+        <div class="panel-head" style="padding:0;border-bottom:0">
+          <h2>データベース連携</h2>
+          <span class="cloud-status"><span id="cloudDot" class="cloud-dot"></span><span id="cloudStatus">ローカル保存</span></span>
+        </div>
+        <div class="cloud-row">
+          <div class="field">
+            <label for="supabaseUrl">Supabase URL</label>
+            <input id="supabaseUrl" placeholder="https://xxxx.supabase.co">
+          </div>
+          <div class="field">
+            <label for="supabaseKey">Supabase anon key</label>
+            <input id="supabaseKey" placeholder="eyJhbGciOi...">
+          </div>
+          <button id="connectDbButton" class="primary">DB接続</button>
+          <button id="syncNowButton" class="ghost">今すぐ同期</button>
+        </div>
+      </section>
 
       <section class="panel overview">
         <div class="panel-head">
@@ -675,8 +729,14 @@
 
   <script>
     const STORAGE_KEY = "salon-progress-board-v1";
+    const DB_CONFIG_KEY = "salon-progress-db-config-v1";
+    const DB_ROW_ID = "main";
     const colors = ["#2f6fed", "#14946f", "#c98211", "#9b5de5", "#d14f3f"];
     let overviewSort = "progress";
+    let supabaseClient = null;
+    let cloudReady = false;
+    let remoteSaveTimer = null;
+    let applyingRemote = false;
 
     const salonMemberNames = `
 愛 樋口愛美いくみ
@@ -1111,9 +1171,27 @@ shota 平岩しょうた
     const profile = $("#profile");
     const chapterSelect = $("#chapterSelect");
     const toast = $("#toast");
+    const supabaseUrlInput = $("#supabaseUrl");
+    const supabaseKeyInput = $("#supabaseKey");
+    const cloudStatus = $("#cloudStatus");
+    const cloudDot = $("#cloudDot");
 
     function clone(value) {
       return JSON.parse(JSON.stringify(value));
+    }
+
+    function getDbConfig() {
+      try {
+        return JSON.parse(localStorage.getItem(DB_CONFIG_KEY) || "{}");
+      } catch {
+        return {};
+      }
+    }
+
+    function setCloudStatus(message, mode = "") {
+      cloudStatus.textContent = message;
+      cloudDot.className = "cloud-dot";
+      if (mode) cloudDot.classList.add(mode);
     }
 
     function uid(prefix) {
@@ -1274,6 +1352,110 @@ shota 平岩しょうた
 
     function saveState() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      scheduleRemoteSave();
+    }
+
+    function createDbClient(config) {
+      if (!config.url || !config.key || !window.supabase) return null;
+      return window.supabase.createClient(config.url, config.key);
+    }
+
+    async function initDatabase() {
+      const config = getDbConfig();
+      supabaseUrlInput.value = config.url || "";
+      supabaseKeyInput.value = config.key || "";
+
+      if (!config.url || !config.key) {
+        setCloudStatus("ローカル保存", "offline");
+        return;
+      }
+
+      supabaseClient = createDbClient(config);
+      if (!supabaseClient) {
+        setCloudStatus("DBライブラリ未読込", "offline");
+        return;
+      }
+
+      setCloudStatus("DB接続中", "");
+      await loadRemoteState();
+      subscribeRemoteChanges();
+    }
+
+    async function loadRemoteState() {
+      if (!supabaseClient) return;
+      const { data, error } = await supabaseClient
+        .from("salon_progress")
+        .select("data,updated_at")
+        .eq("id", DB_ROW_ID)
+        .maybeSingle();
+
+      if (error) {
+        setCloudStatus("DB読込エラー", "offline");
+        showToast("DBの読み込みに失敗しました");
+        return;
+      }
+
+      if (data?.data?.members?.length) {
+        applyingRemote = true;
+        state = normalize(data.data);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        render();
+        applyingRemote = false;
+      } else {
+        await saveRemoteState(true);
+      }
+
+      cloudReady = true;
+      setCloudStatus("DB同期中", "online");
+    }
+
+    function scheduleRemoteSave() {
+      if (!cloudReady || applyingRemote) return;
+      clearTimeout(remoteSaveTimer);
+      remoteSaveTimer = setTimeout(() => saveRemoteState(false), 450);
+    }
+
+    async function saveRemoteState(silent = false) {
+      if (!supabaseClient) return;
+      const payload = {
+        id: DB_ROW_ID,
+        data: state,
+        updated_at: new Date().toISOString()
+      };
+      const { error } = await supabaseClient
+        .from("salon_progress")
+        .upsert(payload, { onConflict: "id" });
+
+      if (error) {
+        setCloudStatus("DB保存エラー", "offline");
+        if (!silent) showToast("DB保存に失敗しました");
+        return;
+      }
+
+      cloudReady = true;
+      setCloudStatus("DB同期済み", "online");
+      if (!silent) showToast("DBに同期しました");
+    }
+
+    function subscribeRemoteChanges() {
+      if (!supabaseClient) return;
+      supabaseClient
+        .channel("salon-progress-sync")
+        .on("postgres_changes", {
+          event: "*",
+          schema: "public",
+          table: "salon_progress",
+          filter: `id=eq.${DB_ROW_ID}`
+        }, payload => {
+          if (!payload.new?.data || applyingRemote) return;
+          applyingRemote = true;
+          state = normalize(payload.new.data);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+          render();
+          applyingRemote = false;
+          setCloudStatus("DB同期済み", "online");
+        })
+        .subscribe();
     }
 
     function activeMember() {
@@ -1564,6 +1746,34 @@ shota 平岩しょうた
       renderOverview();
     });
 
+    $("#connectDbButton").addEventListener("click", async () => {
+      const url = supabaseUrlInput.value.trim();
+      const key = supabaseKeyInput.value.trim();
+      if (!url || !key) {
+        showToast("Supabase URLとanon keyを入力してください");
+        return;
+      }
+
+      localStorage.setItem(DB_CONFIG_KEY, JSON.stringify({ url, key }));
+      cloudReady = false;
+      supabaseClient = createDbClient({ url, key });
+      await loadRemoteState();
+      subscribeRemoteChanges();
+      await saveRemoteState(true);
+      showToast("DB接続を保存しました");
+    });
+
+    $("#syncNowButton").addEventListener("click", async () => {
+      if (!supabaseClient) {
+        await initDatabase();
+      }
+      if (!supabaseClient) {
+        showToast("先にDB接続を設定してください");
+        return;
+      }
+      await saveRemoteState(false);
+    });
+
     $("#addMemberButton").addEventListener("click", () => {
       const result = promptMember();
       if (!result) return;
@@ -1720,6 +1930,7 @@ shota 平岩しょうた
     });
 
     render();
+    initDatabase();
 
     if ("serviceWorker" in navigator && location.protocol !== "file:") {
       window.addEventListener("load", () => {
