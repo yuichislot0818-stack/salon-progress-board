@@ -1,0 +1,1731 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>サロン進捗管理</title>
+  <meta name="theme-color" content="#121821">
+  <link rel="manifest" href="manifest.webmanifest">
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --surface: #fff;
+      --surface-2: #f8fafc;
+      --text: #202532;
+      --muted: #667085;
+      --line: #dde3ed;
+      --nav: #121821;
+      --blue: #2f6fed;
+      --green: #14946f;
+      --amber: #c98211;
+      --red: #c2413f;
+      --shadow: 0 14px 36px rgba(16, 24, 40, .08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      font-family: "Yu Gothic UI", "Hiragino Sans", Meiryo, system-ui, sans-serif;
+      background:
+        linear-gradient(180deg, rgba(47,111,237,.09), rgba(47,111,237,0) 320px),
+        var(--bg);
+    }
+
+    button, input, select { font: inherit; }
+
+    button {
+      border: 0;
+      border-radius: 7px;
+      cursor: pointer;
+      font-weight: 800;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 282px 1fr;
+    }
+
+    .sidebar {
+      background: var(--nav);
+      color: #f8fafc;
+      padding: 22px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 6px;
+    }
+
+    .mark {
+      width: 42px;
+      height: 42px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, var(--blue), var(--green));
+      font-size: 20px;
+      font-weight: 900;
+    }
+
+    .brand strong { display: block; font-size: 18px; }
+    .brand span { display: block; color: #a9b2c3; font-size: 12px; margin-top: 2px; }
+
+    .search {
+      width: 100%;
+      border: 1px solid #303849;
+      background: #222a37;
+      color: white;
+      border-radius: 7px;
+      padding: 12px;
+      outline: 0;
+    }
+
+    .search::placeholder { color: #9aa4b5; }
+
+    .member-list {
+      display: grid;
+      gap: 8px;
+      overflow: auto;
+      padding-right: 2px;
+    }
+
+    .member {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 42px 1fr auto;
+      align-items: center;
+      gap: 10px;
+      text-align: left;
+      color: #dce3ef;
+      background: transparent;
+      padding: 10px 8px;
+    }
+
+    .member:hover,
+    .member.active { background: #222a37; }
+
+    .avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: white;
+      font-weight: 900;
+      background: var(--blue);
+    }
+
+    .avatar.large {
+      width: 58px;
+      height: 58px;
+      font-size: 20px;
+    }
+
+    .member-name { font-weight: 800; }
+    .member-note { color: #a9b2c3; font-size: 12px; margin-top: 2px; }
+    .member-percent { color: white; font-size: 13px; font-weight: 900; }
+
+    .side-actions {
+      margin-top: auto;
+      display: grid;
+      gap: 8px;
+    }
+
+    .dark-button {
+      background: #222a37;
+      color: white;
+      padding: 11px;
+    }
+
+    main {
+      min-width: 0;
+      padding: 26px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(28px, 4vw, 40px);
+      letter-spacing: 0;
+    }
+
+    .lead {
+      margin: 8px 0 0;
+      color: var(--muted);
+      line-height: 1.7;
+      max-width: 780px;
+    }
+
+    .primary {
+      background: var(--blue);
+      color: white;
+      padding: 12px 15px;
+      box-shadow: 0 12px 22px rgba(47,111,237,.18);
+      white-space: nowrap;
+    }
+
+    .ghost {
+      background: #eef2f8;
+      color: #263043;
+      padding: 10px 12px;
+    }
+
+    .danger {
+      background: #fff0ef;
+      color: var(--red);
+      padding: 10px 12px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(130px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .stat, .panel {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .stat {
+      padding: 16px;
+      min-height: 100px;
+    }
+
+    .stat span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .stat strong {
+      display: block;
+      margin-top: 10px;
+      font-size: 28px;
+    }
+
+    .overview {
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+
+    .overview-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 760px;
+    }
+
+    .table-scroll { overflow-x: auto; }
+
+    th, td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: middle;
+      font-size: 14px;
+    }
+
+    th {
+      color: var(--muted);
+      background: var(--surface-2);
+      font-size: 12px;
+    }
+
+    tr:last-child td { border-bottom: 0; }
+
+    .student-cell {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 190px;
+    }
+
+    .bar {
+      width: 150px;
+      height: 9px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: #e9eef6;
+    }
+
+    .bar-fill {
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, var(--blue), var(--green));
+      border-radius: inherit;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 72px;
+      height: 28px;
+      padding: 0 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 900;
+      background: #eef2f8;
+      color: #263043;
+    }
+
+    .status-pill.done { background: #e9f8f2; color: var(--green); }
+    .status-pill.alert { background: #fff6e6; color: var(--amber); }
+    .status-pill.late { background: #fff0ef; color: var(--red); }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 340px;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .panel { overflow: hidden; }
+
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .panel-head h2,
+    .panel-head h3 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .chapter { border-bottom: 1px solid var(--line); }
+    .chapter:last-child { border-bottom: 0; }
+
+    .chapter-summary {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 14px;
+      align-items: center;
+      padding: 18px 16px;
+    }
+
+    .chapter-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 9px;
+    }
+
+    .chapter-title strong {
+      font-size: 17px;
+      overflow-wrap: anywhere;
+    }
+
+    .badge {
+      min-width: 46px;
+      height: 26px;
+      padding: 0 10px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #e9f8f2;
+      color: var(--green);
+      font-size: 12px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .progress-track {
+      height: 10px;
+      background: #ecf0f6;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--blue), var(--green));
+      transition: width .2s ease;
+    }
+
+    .chapter-meta,
+    .due-note {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .chapter-description {
+      margin: 10px 0 0;
+      max-width: 760px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.7;
+      white-space: pre-line;
+    }
+
+    .due-note.late { color: var(--red); font-weight: 800; }
+    .due-note.soon { color: var(--amber); font-weight: 800; }
+
+    .tasks {
+      display: grid;
+      gap: 8px;
+      padding: 0 16px 18px;
+    }
+
+    .task {
+      display: grid;
+      grid-template-columns: 28px 1fr 150px auto;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: var(--surface-2);
+      border: 1px solid #edf1f6;
+      border-radius: 7px;
+    }
+
+    .task input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--green);
+    }
+
+    .task input[type="date"] {
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 8px;
+      background: white;
+      min-width: 0;
+    }
+
+    .task-title { overflow-wrap: anywhere; }
+    .task.done .task-title { color: var(--muted); text-decoration: line-through; }
+
+    .side-panel {
+      display: grid;
+      gap: 16px;
+    }
+
+    .profile {
+      padding: 18px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .profile-main {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+    }
+
+    .profile h2 {
+      margin: 0;
+      font-size: 22px;
+    }
+
+    .profile p {
+      margin: 3px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .ring {
+      --angle: 0deg;
+      width: 150px;
+      height: 150px;
+      margin: 0 auto;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: conic-gradient(var(--green) var(--angle), #edf1f6 0deg);
+    }
+
+    .ring-inner {
+      width: 112px;
+      height: 112px;
+      border-radius: 50%;
+      background: white;
+      border: 1px solid #edf1f6;
+      display: grid;
+      place-items: center;
+      text-align: center;
+    }
+
+    .ring-inner strong {
+      display: block;
+      font-size: 30px;
+    }
+
+    .ring-inner span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .form {
+      display: grid;
+      gap: 10px;
+      padding: 16px;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .field label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .field input,
+    .field select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: white;
+      outline: 0;
+      padding: 11px 12px;
+    }
+
+    .empty {
+      padding: 26px 16px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 5;
+      padding: 12px 14px;
+      border-radius: 7px;
+      background: #111827;
+      color: white;
+      box-shadow: var(--shadow);
+      opacity: 0;
+      transform: translateY(10px);
+      pointer-events: none;
+      transition: opacity .2s ease, transform .2s ease;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 1120px) {
+      .app { grid-template-columns: 230px 1fr; }
+      .workspace { grid-template-columns: 1fr; }
+      .stats { grid-template-columns: repeat(2, minmax(140px, 1fr)); }
+    }
+
+    @media (max-width: 760px) {
+      .app { display: block; }
+      .sidebar { min-height: 0; }
+      .member-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        max-height: 280px;
+      }
+      main { padding: 18px; }
+      .topbar { display: grid; }
+      .stats { grid-template-columns: 1fr; }
+      .chapter-summary { grid-template-columns: 1fr; }
+      .task { grid-template-columns: 28px 1fr; }
+      .task input[type="date"],
+      .task .danger { grid-column: 2; justify-self: start; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="mark">進</div>
+        <div>
+          <strong>サロン進捗管理</strong>
+          <span>Member Progress Board</span>
+        </div>
+      </div>
+
+      <input id="memberSearch" class="search" type="search" placeholder="サロン生を検索">
+      <div id="memberList" class="member-list"></div>
+
+      <div class="side-actions">
+        <button id="addMemberButton" class="dark-button">サロン生を追加</button>
+        <button id="resetButton" class="dark-button">サンプルに戻す</button>
+      </div>
+    </aside>
+
+    <main>
+      <div class="topbar">
+        <div>
+          <h1>サロン生の進捗をまとめて管理</h1>
+          <p class="lead">章別タスク、消化率、期限の近い課題、全員の進捗比較をひとつの画面で確認できます。</p>
+        </div>
+        <button id="focusChapterForm" class="primary">章を追加</button>
+      </div>
+
+      <section id="stats" class="stats"></section>
+
+      <section class="panel overview">
+        <div class="panel-head">
+          <h2>全員の進捗一覧</h2>
+          <div class="toolbar">
+            <button id="sortByProgress" class="ghost">進捗順</button>
+            <button id="sortByDue" class="ghost">期限順</button>
+          </div>
+        </div>
+        <div class="table-scroll">
+          <table class="overview-table">
+            <thead>
+              <tr>
+                <th>サロン生</th>
+                <th>消化率</th>
+                <th>完了タスク</th>
+                <th>完了章</th>
+                <th>次の期限</th>
+                <th>状態</th>
+              </tr>
+            </thead>
+            <tbody id="overviewRows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <div class="workspace">
+        <section class="panel">
+          <div class="panel-head">
+            <h2>章別タスク</h2>
+            <div class="toolbar">
+              <button id="completeAllButton" class="ghost">全完了</button>
+              <button id="clearAllButton" class="ghost">全解除</button>
+            </div>
+          </div>
+          <div id="chapters"></div>
+        </section>
+
+        <aside class="side-panel">
+          <section id="profile" class="panel profile"></section>
+
+          <section class="panel">
+            <div class="panel-head"><h3>タスクを追加</h3></div>
+            <form id="taskForm" class="form">
+              <div class="field">
+                <label for="chapterSelect">追加先</label>
+                <select id="chapterSelect" required></select>
+              </div>
+              <div class="field">
+                <label for="taskName">タスク名</label>
+                <input id="taskName" required placeholder="例: ワークシートを提出">
+              </div>
+              <div class="field">
+                <label for="taskDue">期限</label>
+                <input id="taskDue" type="date">
+              </div>
+              <button class="primary" type="submit">追加する</button>
+            </form>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head"><h3>章を追加</h3></div>
+            <form id="chapterForm" class="form">
+              <div class="field">
+                <label for="chapterName">章タイトル</label>
+                <input id="chapterName" required placeholder="例: 第三章 実践課題">
+              </div>
+              <button class="primary" type="submit">章を作成</button>
+            </form>
+          </section>
+        </aside>
+      </div>
+    </main>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    const STORAGE_KEY = "salon-progress-board-v1";
+    const colors = ["#2f6fed", "#14946f", "#c98211", "#9b5de5", "#d14f3f"];
+    let overviewSort = "progress";
+
+    const salonMemberNames = `
+愛 樋口愛美いくみ
+あきな 佐藤空南
+あきのり
+アキ 長谷川秋子
+麻実(シバタマミ
+アズ ヒロハタアズサ
+淳カドワキジュン
+あつし 久田あつし
+阿部美津子
+亜美 木下弘美
+彩 平井あやか
+あらき てるや
+アラン 吉田圭吾
+あわ阿波賀 正也
+五十嵐ゆかり
+井口 真次
+池畑裕一
+石井
+石切山 愛
+石堂光生
+いそがいしゅんすけ
+市村達也
+今井雅子
+今村 拓也
+岩城 禎
+岩崎成雄
+植村真
+鵜島亮介
+浦尾瞳子(池田)
+うらみん三浦ミツヒロ
+憂季 葉山ゆうき
+えつみ飯塚悦美
+夷 賢二
+えみりん西川えみこ
+えりか 岡村えりか
+えりな(小見絵理奈
+大島まゆみ
+大津 裕子
+おか 岡田吉人ヨシト
+奥田直樹
+おっく ヤマモトタカユキ
+小野 栄
+おやかた新妻武敏
+かえで 坂上楓
+柏 奥川えりか
+かずや幸地知哉
+かずよ清水和代
+がっちゃんねる【笠井】
+加藤 雅也上越
+かなやん 金谷翔太
+がみこ オオイモモカ
+上条裕一
+亀田 恭平
+儀間朝彦
+キャナチ(ユグチカナコ
+きゅうり武内隆起
+きょうか(佐藤杏佳
+ぐっち(ナカニシアキ
+久美子 タキザワクミコ
+くら倉陵
+栗山清臣
+黒田美穂
+クロダユウスケ
+黒田裕太
+けいた(ヒガケイタ
+ケン石橋健治
+けんご古一健児
+健介 ミナトケンスケ
+けん 岩崎健次
+こういちろう 廣川
+こうき高橋広基
+コウ細井こういち
+コザ
+小林みゆき
+小松原(バラキ
+こ 三輪知子
+齋賀 健太
+齋藤大輔
+齋藤貴洋
+さかも
+櫻庭 連
+桜山(Sakuyama)加藤薫
+さこう
+佐藤史也
+佐藤莉奈
+智史 荒木
+さらだヤストミ ヒカル
+ざわ ニシザワヒロトシ
+山村昂暉
+柴田佑樹
+清水政彰
+秀 水木秀幸（永木）
+シュウ 梁地修司ヤナチシュウジ
+しゅんすけ
+じゅんたろう。大田黒ジュン
+潤(アサノジュン
+将輝
+白石拓嗣
+シンヤ結城しんや
+しんや
+しん(タテシマシンイチロウ
+ずーみん泉詩織
+鈴木たかのり
+せいた
+せ(日高せいら
+大型 (小林だいち 柏崎の先生
+たかこ 梅川たかこ
+たかこ(ヤマザキタカコ
+高橋 智
+田口 保憲
+たくや 戸田たくや
+竹内のり子
+たておかしょうこ 舘岡祥子
+田中壮大まさひろ
+たむら
+ちはー 市原伸泰
+つばさくん
+てっちん（長友鉄治）
+トウヤマ 雷山耀
+徳丸翔也
+トシ 森としふみ
+戸田 祐一
+トム西澤慶
+トモヤ鈴木知也
+永田友耶 ナガタユウヤ
+中田 健一
+ナカガワ川ひとみ
+なかむら
+奈須慎一
+なつ安川夏姫
+名前はLeo。河崎玲央
+なる(ナルミヤアキヒロ
+ニシモリブンヘイ サポート専用LINE
+根津夕美
+芳賀しょうこ
+ハジメ”河井はじめ
+はじめ(ニシモリブンヘイ
+はち尾崎あきら
+馬場恭平
+はやさか 早坂健加
+早知恵く(ナカムラサチエ
+はらおー大原直樹
+はるな 石原早瑠菜
+光理
+樋川 洋助
+ひよこ 加藤浩子
+ひろあき
+ひろくん野下宏幸
+ヒロ佐々木万博
+ひろ種市宏美 ペイパル
+大翔 水落大翔ヒロト
+ひろまる
+ひろゆき
+ひろ 尾高博子
+ふく ゆう
+富山恭仁
+藤村麻衣
+藤本さなえ
+ふでそ@P 筆村崇充
+フミフミ荘野史子
+古田 聡三郎
+ぶんか 菊川和大
+堀場 達也
+まーちゃん 嶋田真仲子まちこ
+真のおまか小川誠
+松本 真和
+まつ 松下まさき
+まなみ(米山まなみ
+まみこ 神田マミコ
+真弓泰葉 山口泰葉
+ま〜し(オオクボマサシ
+三上瑠々華
+ミキティ
+未来 樋未来
+みちこ 長谷川みちこ
+みなもと せいじ
+美濃川 久美子
+みのる 渡辺稔
+みむらら みずき 三村瑞希
+宮島展章
+宮堀浩平
+みやも 宮本賢次
+みや うえやまみやこ
+美和 渡邉美和
+むかい
+めぐ榎本杏(えのもと あん緑
+めぐみ マノメグミ
+やすお上山康夫
+泰久(アオヤマヤスヒサ
+ヤッシー矢代秀一
+山口裕也
+山口 勇二
+山崎なぎさ
+山田ゆみこ
+やまもと やすし
+ゆい 菅 ゆい
+ゆうき黒木裕貴
+ゆーき 森岡ゆう紀
+ゆーじ 長谷川祐治
+ゆうぞう
+ゆうた中村優太
+ゆうたろう
+ゆうと 角田悠斗
+ゆうや 菅原ゆうや
+ゆーり 前田ゆり
+優のギリギリ
+ゆき 中原幸
+ゆみ安達由三
+由美子
+祐美 榊原祐美
+ゆゆ 吉田ゆうた
+百合香 (アカサカユリカ
+ゆ Kakemy掛水由美
+よこた 注意
+吉村修司
+らん 豊平由希
+リサリサ (増村)
+龍之介 佐藤
+りゅう 津曲りゅう
+りん リンプン
+れいか(ナカヤマレイカ
+れつし
+れん安藤蓮
+わくわくしゅん(クドシュン
+わくわく 三浦
+aiko♡井上愛子
+Airi.u上原あいり
+aitch 宮川愛
+a i 廣田衣
+AKI関口あきこ
+akina 郷上明奈
+Araki Yasuhiro
+arisa カワハラアリサ
+ASAHI 宮本あさひ
+A U白坂亜由美
+AYAKA 藤井綾華
+ayu 中江亜由
+chiiii 岸口千尋
+Chikako (マスダチカコ
+ERI 梛原えりこ
+eri 高橋江利子
+fuminoムレフミノ
+hideto小倉ヒデト
+hide 野元秀樹
+hisaya 長谷川ヒサヤ
+Honoka(サトウホノカ
+h-sumi(蓮見たかゆき
+H.N 中島ひとと
+ikuho 伊藤育穂
+JUN 伊藤淳
+Junta 市場じゅんた 大阪
+J (サブ) 夏目じゅんた
+kana オクヤマカナ
+kana °＊•上田加奈
+Kaori 川又香緒里
+Kärlek カワイアイカ
+KASHIMA-P8sub
+KAZUSHI 本間和志
+Kenta Shingu 新宮健太
+kitamii 北岡美幸
+kk (岸田) 岸田一彦
+K. I 伊賀敢けいすけ
+ma森真由美
+MakotoKobayashi小林真人
+Manami.I石川まなみ
+Manami♡渡辺まなみ
+Masa 安藤まさえ
+Masumi
+Maya Tanaka 田中
+ma-tu松岡ひとし
+MIHO(コジマミホ
+MIHO★。岩村美保
+miki黒崎みき
+MiKi 荻島美輝
+Miki ふくだみき
+miki777miki777
+misaki岡美咲
+mochida 持田智之
+MoToたけうちもとき
+MOTOKI 白井元規
+MOTO(タカダモトヒロ
+MR 大久保 篤
+M. I 岩田愛美まなみ
+m 森真由美
+nakakuma midori
+nami
+nami 木下奈美子
+natsumi 黒石奈津美
+Nishioka Masahiro
+nnnttt 中田とおる
+ONI 大西将貴
+OnoTaka小野貴博
+REI 上杉れいか
+RIE 益満理恵
+RYO 梅津
+ryo2
+SARII (ツクリイカ
+sa さわの
+Sekky
+shin 中西しんたろう
+Shohei那須祥平
+sho 真嶌屋尚
+Shun Endo
+SINGO 谷口しんご
+st佐藤大介ダイスケ
+S.Y 鈴木芳樹
+s 山口智弓
+T てっさん 正田哲也
+TA
+Takahiro Kimura
+Takasaki
+takaya高谷稔
+takayo 小沢宝代
+toayua 井上愛咲
+Tomo
+TOMOKO 大矢智子
+tomomii(ウエノトモミ
+T.K浅岡卓来
+T  O  Y  島袋けいこ
+Urata Azusa 浦田
+WEIN YuuSHIN 柳原 CEO
+yotcha 小倉佳子
+yu 矢野ゆかり
+YUHKO(カナダユウコ
+yuka Ozone 小曽根裕佳
+yuu 藤田まお
+YUYA 田中佑弥
+YY 田中陽子
+y 岩井ゆうや
+Y's石井来人
+ZIN 池田仁
+AYUNON吉田亜弓
+@ ともぞぉ本庄 智義
+HITOMi 今井 瞳
+σ(か'ω'ず) 小林一孝
+み。三根史生
+きみー 岩崎貴未果
+☆サトウコウタ☆
+☆裕也 山口裕也
+渡邉愛梨
+(chisato+エリ) 鈴木えりな
+👤Ninomiya二宮浩司
+ようこ筒井陽子
+寛子 磯野寛子
+shota 平岩しょうた
+`.split("\n").map(name => name.trim()).filter(Boolean);
+
+    const sampleData = {
+      activeMemberId: "m1",
+      members: [
+        {
+          id: "m1",
+          name: "上条 裕一",
+          note: "参加メンバー",
+          color: colors[0],
+          chapters: [
+            { id: "c1", title: "第一章 オリエンテーション", tasks: [
+              { id: "t1", title: "プロフィールを登録", done: true, due: "2026-05-12" },
+              { id: "t2", title: "目標シートを記入", done: true, due: "2026-05-14" },
+              { id: "t3", title: "初回動画を視聴", done: true, due: "2026-05-15" },
+              { id: "t4", title: "自己紹介投稿", done: true, due: "2026-05-16" }
+            ]},
+            { id: "c2", title: "第二章 基礎ワーク", tasks: [
+              { id: "t5", title: "チェックリスト10項目を確認", done: true, due: "2026-05-20" },
+              { id: "t6", title: "ワーク1を提出", done: true, due: "2026-05-22" },
+              { id: "t7", title: "添削コメントを反映", done: false, due: "2026-05-24" },
+              { id: "t8", title: "進捗報告を投稿", done: false, due: "2026-05-27" }
+            ]},
+            { id: "c3", title: "第三章 実践課題", tasks: [
+              { id: "t9", title: "実践テーマを決定", done: true, due: "2026-05-28" },
+              { id: "t10", title: "中間レビューを予約", done: false, due: "2026-06-02" }
+            ]}
+          ]
+        },
+        {
+          id: "m2",
+          name: "本間 和志",
+          note: "参加メンバー",
+          color: colors[1],
+          chapters: [
+            { id: "c1", title: "第一章 オリエンテーション", tasks: [
+              { id: "t1", title: "プロフィールを登録", done: true, due: "2026-05-12" },
+              { id: "t2", title: "目標シートを記入", done: true, due: "2026-05-14" },
+              { id: "t3", title: "初回動画を視聴", done: true, due: "2026-05-15" },
+              { id: "t4", title: "自己紹介投稿", done: true, due: "2026-05-16" }
+            ]},
+            { id: "c2", title: "第二章 基礎ワーク", tasks: [
+              { id: "t5", title: "チェックリスト10項目を確認", done: true, due: "2026-05-20" },
+              { id: "t6", title: "ワーク1を提出", done: true, due: "2026-05-22" },
+              { id: "t7", title: "添削コメントを反映", done: true, due: "2026-05-24" },
+              { id: "t8", title: "進捗報告を投稿", done: true, due: "2026-05-27" }
+            ]},
+            { id: "c3", title: "第三章 実践課題", tasks: [
+              { id: "t9", title: "実践テーマを決定", done: false, due: "2026-05-28" },
+              { id: "t10", title: "中間レビューを予約", done: false, due: "2026-06-02" }
+            ]}
+          ]
+        },
+        {
+          id: "m3",
+          name: "峯村 彰一",
+          note: "参加メンバー",
+          color: colors[2],
+          chapters: [
+            { id: "c1", title: "第一章 オリエンテーション", tasks: [
+              { id: "t1", title: "プロフィールを登録", done: true, due: "2026-05-12" },
+              { id: "t2", title: "目標シートを記入", done: false, due: "2026-05-14" },
+              { id: "t3", title: "初回動画を視聴", done: false, due: "2026-05-15" },
+              { id: "t4", title: "自己紹介投稿", done: false, due: "2026-05-16" }
+            ]},
+            { id: "c2", title: "第二章 基礎ワーク", tasks: [
+              { id: "t5", title: "チェックリスト10項目を確認", done: false, due: "2026-05-20" },
+              { id: "t6", title: "ワーク1を提出", done: false, due: "2026-05-22" },
+              { id: "t7", title: "添削コメントを反映", done: false, due: "2026-05-24" },
+              { id: "t8", title: "進捗報告を投稿", done: false, due: "2026-05-27" }
+            ]}
+          ]
+        }
+      ]
+    };
+
+    let state = loadState();
+
+    const $ = selector => document.querySelector(selector);
+    const memberList = $("#memberList");
+    const memberSearch = $("#memberSearch");
+    const stats = $("#stats");
+    const overviewRows = $("#overviewRows");
+    const chapters = $("#chapters");
+    const profile = $("#profile");
+    const chapterSelect = $("#chapterSelect");
+    const toast = $("#toast");
+
+    function clone(value) {
+      return JSON.parse(JSON.stringify(value));
+    }
+
+    function uid(prefix) {
+      return prefix + "_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 7);
+    }
+
+    function makeMemberFromTemplate(name, index, template) {
+      return {
+        id: uid("m"),
+        name,
+        note: "緑のサロン生",
+        color: colors[index % colors.length],
+        chapters: template.chapters.map(chapter => ({
+          id: uid("c"),
+          title: chapter.title,
+          description: chapter.description || "",
+          tasks: chapter.tasks.map(task => ({
+            id: uid("t"),
+            title: task.title,
+            done: false,
+            due: task.due || ""
+          }))
+        }))
+      };
+    }
+
+    function loadState() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (!saved) return normalize(clone(sampleData));
+      try {
+        const parsed = JSON.parse(saved);
+        return parsed.members && parsed.members.length ? normalize(parsed) : normalize(clone(sampleData));
+      } catch {
+        return normalize(clone(sampleData));
+      }
+    }
+
+    function makeFxChapter() {
+      return {
+        id: "c3",
+        title: "第3章 FX編",
+        description: "〜緑のサロン生 タスク管理〜\n\nまずは「環境を整える」ことが最重要です。無料ボーナスを活用して実際にFXに触れ、操作に慣れる・注文方法を覚える・利益と損失の動きを理解することを目的に進めましょう。いきなり大きく稼ごうとせず、まずは経験値を積みます。",
+        tasks: [
+          { id: "fx_t1", title: "無料ボーナスを消化する", done: false, due: "" },
+          { id: "fx_t2", title: "操作に慣れる", done: false, due: "" },
+          { id: "fx_t3", title: "注文方法を覚える", done: false, due: "" },
+          { id: "fx_t4", title: "利益と損失の動きを理解する", done: false, due: "" },
+          { id: "fx_t5", title: "動画①を見る", done: false, due: "" },
+          { id: "fx_t6", title: "動画②を見る", done: false, due: "" },
+          { id: "fx_t7", title: "動画③を見る", done: false, due: "" },
+          { id: "fx_t8", title: "動画④を見る", done: false, due: "" },
+          { id: "fx_t9", title: "動画⑤を見る", done: false, due: "" },
+          { id: "fx_t10", title: "動画⑥を見る", done: false, due: "" },
+          { id: "fx_t11", title: "動画⑦を見る", done: false, due: "" },
+          { id: "fx_t12", title: "動画⑧を見る", done: false, due: "" },
+          { id: "fx_t13", title: "動画⑨を見る", done: false, due: "" },
+          { id: "fx_t14", title: "動画⑩を見る", done: false, due: "" },
+          { id: "fx_t15", title: "XMTrading 登録をする", done: false, due: "" },
+          { id: "fx_t16", title: "XMTrading 口座開設を完了する", done: false, due: "" },
+          { id: "fx_t17", title: "XMTrading 本人確認を完了する", done: false, due: "" },
+          { id: "fx_t18", title: "XMTrading ログイン確認をする", done: false, due: "" },
+          { id: "fx_t19", title: "Arch Finance 登録をする", done: false, due: "" },
+          { id: "fx_t20", title: "Arch Finance アカウント作成を完了する", done: false, due: "" },
+          { id: "fx_t21", title: "Arch Finance 必要情報を入力する", done: false, due: "" },
+          { id: "fx_t22", title: "Arch Finance 設定確認をする", done: false, due: "" },
+          { id: "fx_t23", title: "FXGT 登録をする", done: false, due: "" },
+          { id: "fx_t24", title: "FXGT 口座開設を完了する", done: false, due: "" },
+          { id: "fx_t25", title: "FXGT 本人確認を完了する", done: false, due: "" },
+          { id: "fx_t26", title: "FXGT ログイン確認をする", done: false, due: "" }
+        ]
+      };
+    }
+
+    function ensureFxChapter(member) {
+      const chapterIndex = member.chapters.findIndex(chapter => {
+        return chapter.title === "第3章 FX編" || chapter.title.includes("第三章") || chapter.title.includes("第3章") || chapter.id === "c3";
+      });
+
+      if (chapterIndex === -1) {
+        member.chapters.push(makeFxChapter());
+        return;
+      }
+
+      if (member.chapters[chapterIndex].title !== "第3章 FX編") {
+        member.chapters[chapterIndex] = makeFxChapter();
+      }
+    }
+
+    function makeAffiliateChapter() {
+      return {
+        id: "c4",
+        title: "第4章 アフィリエイト編",
+        description: "〜緑のサロン生 タスク管理〜\n\nポイントサイトとASPの登録を進め、アフィリエイトに取り組むための環境を整えます。登録だけで終わらせず、ログイン確認・案件確認・管理画面確認まで進めましょう。",
+        tasks: [
+          { id: "af_t1", title: "ハピタスに登録する", done: false, due: "" },
+          { id: "af_t2", title: "Hapitas アカウント作成を完了する", done: false, due: "" },
+          { id: "af_t3", title: "Hapitas ログイン確認をする", done: false, due: "" },
+          { id: "af_t4", title: "モッピーに登録する", done: false, due: "" },
+          { id: "af_t5", title: "Moppy 案件確認をする", done: false, due: "" },
+          { id: "af_t6", title: "PointTown に登録する", done: false, due: "" },
+          { id: "af_t7", title: "PointTown 案件一覧を確認する", done: false, due: "" },
+          { id: "af_t8", title: "A8.net に登録する", done: false, due: "" },
+          { id: "af_t9", title: "A8.net 会員登録を完了する", done: false, due: "" },
+          { id: "af_t10", title: "A8.net サイト登録を完了する", done: false, due: "" },
+          { id: "af_t11", title: "A8.net ログイン確認をする", done: false, due: "" },
+          { id: "af_t12", title: "TCS に登録する", done: false, due: "" },
+          { id: "af_t13", title: "TCS 管理画面を確認する", done: false, due: "" },
+          { id: "af_t14", title: "JASNET に登録する", done: false, due: "" },
+          { id: "af_t15", title: "JASNET 案件チェックをする", done: false, due: "" },
+          { id: "af_t16", title: "ASPLAY に登録する", done: false, due: "" }
+        ]
+      };
+    }
+
+    function ensureAffiliateChapter(member) {
+      const chapterIndex = member.chapters.findIndex(chapter => {
+        return chapter.title === "第4章 アフィリエイト編" || chapter.title.includes("アフィリエイト") || chapter.id === "c4";
+      });
+
+      if (chapterIndex === -1) {
+        member.chapters.push(makeAffiliateChapter());
+        return;
+      }
+
+      if (member.chapters[chapterIndex].title !== "第4章 アフィリエイト編") {
+        member.chapters[chapterIndex] = makeAffiliateChapter();
+      }
+    }
+
+    function normalize(data) {
+      const legacyNames = ["佐藤 美咲", "田中 悠真", "山本 梨花", "上条 裕一", "本間 和志", "峯村 彰一", "上条裕一", "本間和志", "峯村彰一"];
+      const isLegacyOnly = data.members.length <= 3 && data.members.every(member => legacyNames.includes(member.name));
+
+      if (isLegacyOnly) {
+        data = { activeMemberId: "", members: [] };
+      }
+
+      const template = data.members[0] || sampleData.members[0];
+      salonMemberNames.forEach((name, index) => {
+        if (data.members.some(member => member.name === name)) return;
+        data.members.push(makeMemberFromTemplate(name, data.members.length + index, template));
+      });
+
+      if (!data.activeMemberId && data.members[0]) data.activeMemberId = data.members[0].id;
+
+      data.members.forEach(member => {
+        ensureFxChapter(member);
+        ensureAffiliateChapter(member);
+        member.chapters.forEach(chapter => {
+          if (!("description" in chapter)) chapter.description = "";
+          chapter.tasks.forEach(task => {
+            if (!("due" in task)) task.due = "";
+          });
+        });
+      });
+      return data;
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function activeMember() {
+      return state.members.find(member => member.id === state.activeMemberId) || state.members[0];
+    }
+
+    function allTasks(member) {
+      return member.chapters.flatMap(chapter => chapter.tasks);
+    }
+
+    function completion(memberOrChapters) {
+      const chapterList = Array.isArray(memberOrChapters) ? memberOrChapters : memberOrChapters.chapters;
+      const taskList = chapterList.flatMap(chapter => chapter.tasks);
+      const total = taskList.length;
+      const done = taskList.filter(task => task.done).length;
+      return { total, done, percent: total ? Math.round(done / total * 100) : 0 };
+    }
+
+    function chapterCompletion(chapter) {
+      const total = chapter.tasks.length;
+      const done = chapter.tasks.filter(task => task.done).length;
+      return { total, done, percent: total ? Math.round(done / total * 100) : 0 };
+    }
+
+    function nextDue(member) {
+      const pending = allTasks(member).filter(task => !task.done && task.due).sort((a, b) => a.due.localeCompare(b.due));
+      return pending[0] || null;
+    }
+
+    function daysUntil(dateString) {
+      if (!dateString) return null;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const due = new Date(dateString + "T00:00:00");
+      return Math.round((due - today) / 86400000);
+    }
+
+    function dueText(task) {
+      if (!task || !task.due) return "未設定";
+      const days = daysUntil(task.due);
+      if (days < 0) return `${formatDate(task.due)} 期限超過`;
+      if (days === 0) return `${formatDate(task.due)} 今日`;
+      if (days <= 3) return `${formatDate(task.due)} あと${days}日`;
+      return formatDate(task.due);
+    }
+
+    function dueClass(task) {
+      if (!task || !task.due) return "";
+      const days = daysUntil(task.due);
+      if (days < 0) return "late";
+      if (days <= 3) return "soon";
+      return "";
+    }
+
+    function formatDate(value) {
+      if (!value) return "未設定";
+      const [year, month, day] = value.split("-");
+      return `${Number(month)}/${Number(day)}`;
+    }
+
+    function memberStatus(member) {
+      const progress = completion(member);
+      const due = nextDue(member);
+      const dueState = dueClass(due);
+      if (progress.percent === 100) return { text: "完了", className: "done" };
+      if (dueState === "late") return { text: "期限超過", className: "late" };
+      if (dueState === "soon") return { text: "期限近い", className: "alert" };
+      if (progress.percent >= 70) return { text: "順調", className: "done" };
+      return { text: "進行中", className: "" };
+    }
+
+    function initials(name) {
+      return name.split(/\s+/).map(part => part[0]).join("").slice(0, 2) || "人";
+    }
+
+    function avatar(member, large = false) {
+      return `<div class="avatar ${large ? "large" : ""}" style="background:${member.color}">${initials(member.name)}</div>`;
+    }
+
+    function statusLabel(percent) {
+      if (percent === 100) return "完了";
+      if (percent >= 70) return "順調";
+      if (percent >= 30) return "進行中";
+      return "着手";
+    }
+
+    function escapeHtml(text) {
+      return String(text).replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      }[char]));
+    }
+
+    function render() {
+      renderMembers();
+      renderStats();
+      renderOverview();
+      renderProfile();
+      renderChapters();
+      renderChapterSelect();
+      saveState();
+    }
+
+    function renderMembers() {
+      const query = memberSearch.value.trim().toLowerCase();
+      const filtered = state.members.filter(member => {
+        return `${member.name} ${member.note}`.toLowerCase().includes(query);
+      }).sort((a, b) => completion(b).percent - completion(a).percent);
+
+      memberList.innerHTML = filtered.map(member => {
+        const progress = completion(member);
+        return `
+          <button class="member ${member.id === state.activeMemberId ? "active" : ""}" data-member-id="${member.id}">
+            ${avatar(member)}
+            <span>
+              <span class="member-name">${escapeHtml(member.name)}</span>
+              <span class="member-note">${progress.done}/${progress.total} タスク</span>
+            </span>
+            <span class="member-percent">${progress.percent}%</span>
+          </button>
+        `;
+      }).join("") || `<div class="empty">該当するサロン生がいません。</div>`;
+    }
+
+    function renderStats() {
+      const member = activeMember();
+      const progress = completion(member);
+      const chapterCount = member.chapters.length;
+      const doneChapters = member.chapters.filter(chapter => chapterCompletion(chapter).percent === 100).length;
+      const average = Math.round(state.members.reduce((sum, item) => sum + completion(item).percent, 0) / state.members.length);
+      const lateCount = state.members.reduce((sum, item) => sum + allTasks(item).filter(task => !task.done && dueClass(task) === "late").length, 0);
+
+      stats.innerHTML = `
+        <div class="stat"><span>選択中の消化率</span><strong>${progress.percent}%</strong></div>
+        <div class="stat"><span>完了タスク</span><strong>${progress.done}/${progress.total}</strong></div>
+        <div class="stat"><span>完了した章</span><strong>${doneChapters}/${chapterCount}</strong></div>
+        <div class="stat"><span>全体平均</span><strong>${average}%</strong></div>
+        <div class="stat"><span>期限超過</span><strong>${lateCount}</strong></div>
+      `;
+    }
+
+    function renderOverview() {
+      const members = [...state.members].sort((a, b) => {
+        if (overviewSort === "due") {
+          const aDue = nextDue(a)?.due || "9999-12-31";
+          const bDue = nextDue(b)?.due || "9999-12-31";
+          return aDue.localeCompare(bDue);
+        }
+        return completion(b).percent - completion(a).percent;
+      });
+
+      overviewRows.innerHTML = members.map(member => {
+        const progress = completion(member);
+        const doneChapters = member.chapters.filter(chapter => chapterCompletion(chapter).percent === 100).length;
+        const due = nextDue(member);
+        const status = memberStatus(member);
+        return `
+          <tr data-overview-member="${member.id}">
+            <td><div class="student-cell">${avatar(member)}<div><strong>${escapeHtml(member.name)}</strong><div class="member-note">${escapeHtml(member.note)}</div></div></div></td>
+            <td><div class="toolbar"><div class="bar"><div class="bar-fill" style="width:${progress.percent}%"></div></div><strong>${progress.percent}%</strong></div></td>
+            <td>${progress.done}/${progress.total}</td>
+            <td>${doneChapters}/${member.chapters.length}</td>
+            <td><span class="${dueClass(due) ? "due-note " + dueClass(due) : ""}">${dueText(due)}</span></td>
+            <td><span class="status-pill ${status.className}">${status.text}</span></td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function renderProfile() {
+      const member = activeMember();
+      const progress = completion(member);
+      const due = nextDue(member);
+
+      profile.innerHTML = `
+        <div class="profile-main">
+          ${avatar(member, true)}
+          <div>
+            <h2>${escapeHtml(member.name)}</h2>
+            <p>${escapeHtml(member.note)}</p>
+          </div>
+        </div>
+        <div class="ring" style="--angle:${progress.percent * 3.6}deg">
+          <div class="ring-inner">
+            <div>
+              <strong>${progress.percent}%</strong>
+              <span>${statusLabel(progress.percent)}</span>
+            </div>
+          </div>
+        </div>
+        <p class="due-note ${dueClass(due)}">次の期限: ${dueText(due)}</p>
+        <div class="toolbar">
+          <button id="editMemberButton" class="ghost">情報編集</button>
+          <button id="deleteMemberButton" class="danger">削除</button>
+        </div>
+      `;
+    }
+
+    function renderChapters() {
+      const member = activeMember();
+      if (!member.chapters.length) {
+        chapters.innerHTML = `<div class="empty">まだ章がありません。右側から追加できます。</div>`;
+        return;
+      }
+
+      chapters.innerHTML = member.chapters.map(chapter => {
+        const progress = chapterCompletion(chapter);
+        const tasks = chapter.tasks.map(task => `
+          <label class="task ${task.done ? "done" : ""}">
+            <input type="checkbox" data-chapter-id="${chapter.id}" data-task-id="${task.id}" ${task.done ? "checked" : ""}>
+            <span class="task-title">${escapeHtml(task.title)}<br><span class="due-note ${dueClass(task)}">期限: ${dueText(task)}</span></span>
+            <input type="date" value="${task.due || ""}" data-due-task="${task.id}" data-chapter-id="${chapter.id}" aria-label="期限">
+            <button type="button" class="danger" data-delete-task="${task.id}" data-chapter-id="${chapter.id}">削除</button>
+          </label>
+        `).join("");
+
+        return `
+          <article class="chapter">
+            <div class="chapter-summary">
+              <div>
+                <div class="chapter-title">
+                  <strong>${escapeHtml(chapter.title)}</strong>
+                  <span class="badge">${progress.percent}%</span>
+                </div>
+                <div class="progress-track"><div class="progress-fill" style="width:${progress.percent}%"></div></div>
+                <p class="chapter-meta">${progress.total}個中 ${progress.done}個完了</p>
+                ${chapter.description ? `<p class="chapter-description">${escapeHtml(chapter.description)}</p>` : ""}
+              </div>
+              <div class="toolbar">
+                <button class="ghost" data-fill-chapter="${chapter.id}">章を完了</button>
+                <button class="ghost" data-clear-chapter="${chapter.id}">章を解除</button>
+                <button class="danger" data-delete-chapter="${chapter.id}">章を削除</button>
+              </div>
+            </div>
+            <div class="tasks">${tasks || `<div class="empty">この章にはまだタスクがありません。</div>`}</div>
+          </article>
+        `;
+      }).join("");
+    }
+
+    function renderChapterSelect() {
+      const member = activeMember();
+      chapterSelect.innerHTML = member.chapters.map(chapter => {
+        return `<option value="${chapter.id}">${escapeHtml(chapter.title)}</option>`;
+      }).join("");
+    }
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add("show");
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => toast.classList.remove("show"), 1600);
+    }
+
+    function promptMember(existing = null) {
+      const name = prompt("サロン生の名前", existing ? existing.name : "");
+      if (!name || !name.trim()) return null;
+      const note = prompt("メモや所属コース", existing ? existing.note : "新規メンバー") || "";
+      return { name: name.trim(), note: note.trim() };
+    }
+
+    memberList.addEventListener("click", event => {
+      const button = event.target.closest("[data-member-id]");
+      if (!button) return;
+      state.activeMemberId = button.dataset.memberId;
+      render();
+    });
+
+    overviewRows.addEventListener("click", event => {
+      const row = event.target.closest("[data-overview-member]");
+      if (!row) return;
+      state.activeMemberId = row.dataset.overviewMember;
+      render();
+    });
+
+    memberSearch.addEventListener("input", renderMembers);
+
+    $("#sortByProgress").addEventListener("click", () => {
+      overviewSort = "progress";
+      renderOverview();
+    });
+
+    $("#sortByDue").addEventListener("click", () => {
+      overviewSort = "due";
+      renderOverview();
+    });
+
+    $("#addMemberButton").addEventListener("click", () => {
+      const result = promptMember();
+      if (!result) return;
+      const template = activeMember();
+      const member = {
+        id: uid("m"),
+        name: result.name,
+        note: result.note,
+        color: colors[state.members.length % colors.length],
+        chapters: template.chapters.map(chapter => ({
+          id: uid("c"),
+          title: chapter.title,
+          tasks: chapter.tasks.map(task => ({ id: uid("t"), title: task.title, done: false, due: task.due || "" }))
+        }))
+      };
+      state.members.push(member);
+      state.activeMemberId = member.id;
+      showToast("サロン生を追加しました");
+      render();
+    });
+
+    $("#resetButton").addEventListener("click", () => {
+      if (!confirm("保存済みデータを消してサンプルに戻しますか？")) return;
+      state = clone(sampleData);
+      localStorage.removeItem(STORAGE_KEY);
+      showToast("サンプルに戻しました");
+      render();
+    });
+
+    $("#focusChapterForm").addEventListener("click", () => $("#chapterName").focus());
+
+    $("#completeAllButton").addEventListener("click", () => {
+      activeMember().chapters.forEach(chapter => chapter.tasks.forEach(task => task.done = true));
+      showToast("全タスクを完了にしました");
+      render();
+    });
+
+    $("#clearAllButton").addEventListener("click", () => {
+      activeMember().chapters.forEach(chapter => chapter.tasks.forEach(task => task.done = false));
+      showToast("全タスクを未完了にしました");
+      render();
+    });
+
+    profile.addEventListener("click", event => {
+      if (event.target.id === "editMemberButton") {
+        const member = activeMember();
+        const result = promptMember(member);
+        if (!result) return;
+        member.name = result.name;
+        member.note = result.note;
+        showToast("情報を更新しました");
+        render();
+      }
+
+      if (event.target.id === "deleteMemberButton") {
+        if (state.members.length <= 1) {
+          showToast("最低1人は必要です");
+          return;
+        }
+        const member = activeMember();
+        if (!confirm(`${member.name} を削除しますか？`)) return;
+        state.members = state.members.filter(item => item.id !== member.id);
+        state.activeMemberId = state.members[0].id;
+        showToast("サロン生を削除しました");
+        render();
+      }
+    });
+
+    chapters.addEventListener("change", event => {
+      const checkbox = event.target.closest("input[type='checkbox'][data-task-id]");
+      const dueInput = event.target.closest("input[type='date'][data-due-task]");
+      const member = activeMember();
+
+      if (checkbox) {
+        const chapter = member.chapters.find(item => item.id === checkbox.dataset.chapterId);
+        const task = chapter && chapter.tasks.find(item => item.id === checkbox.dataset.taskId);
+        if (!task) return;
+        task.done = checkbox.checked;
+        render();
+      }
+
+      if (dueInput) {
+        const chapter = member.chapters.find(item => item.id === dueInput.dataset.chapterId);
+        const task = chapter && chapter.tasks.find(item => item.id === dueInput.dataset.dueTask);
+        if (!task) return;
+        task.due = dueInput.value;
+        showToast("期限を更新しました");
+        render();
+      }
+    });
+
+    chapters.addEventListener("click", event => {
+      const member = activeMember();
+      const deleteTask = event.target.closest("[data-delete-task]");
+      const fillChapter = event.target.closest("[data-fill-chapter]");
+      const clearChapter = event.target.closest("[data-clear-chapter]");
+      const deleteChapter = event.target.closest("[data-delete-chapter]");
+
+      if (deleteTask) {
+        const chapter = member.chapters.find(item => item.id === deleteTask.dataset.chapterId);
+        chapter.tasks = chapter.tasks.filter(task => task.id !== deleteTask.dataset.deleteTask);
+        showToast("タスクを削除しました");
+        render();
+      }
+
+      if (fillChapter) {
+        const chapter = member.chapters.find(item => item.id === fillChapter.dataset.fillChapter);
+        chapter.tasks.forEach(task => task.done = true);
+        showToast("章を完了にしました");
+        render();
+      }
+
+      if (clearChapter) {
+        const chapter = member.chapters.find(item => item.id === clearChapter.dataset.clearChapter);
+        chapter.tasks.forEach(task => task.done = false);
+        showToast("章を未完了にしました");
+        render();
+      }
+
+      if (deleteChapter) {
+        const chapter = member.chapters.find(item => item.id === deleteChapter.dataset.deleteChapter);
+        if (!confirm(`${chapter.title} を削除しますか？`)) return;
+        member.chapters = member.chapters.filter(item => item.id !== chapter.id);
+        showToast("章を削除しました");
+        render();
+      }
+    });
+
+    $("#taskForm").addEventListener("submit", event => {
+      event.preventDefault();
+      const member = activeMember();
+      const chapter = member.chapters.find(item => item.id === chapterSelect.value);
+      const taskInput = $("#taskName");
+      const dueInput = $("#taskDue");
+      const title = taskInput.value.trim();
+      if (!chapter || !title) return;
+      chapter.tasks.push({ id: uid("t"), title, done: false, due: dueInput.value });
+      taskInput.value = "";
+      dueInput.value = "";
+      taskInput.focus();
+      showToast("タスクを追加しました");
+      render();
+    });
+
+    $("#chapterForm").addEventListener("submit", event => {
+      event.preventDefault();
+      const input = $("#chapterName");
+      const title = input.value.trim();
+      if (!title) return;
+      activeMember().chapters.push({ id: uid("c"), title, tasks: [] });
+      input.value = "";
+      showToast("章を追加しました");
+      render();
+    });
+
+    render();
+
+    if ("serviceWorker" in navigator && location.protocol !== "file:") {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js").catch(() => {});
+      });
+    }
+  </script>
+</body>
+</html>
