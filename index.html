@@ -693,10 +693,6 @@
       <input id="memberSearch" class="search" type="search" placeholder="サロン生を検索">
       <div id="memberList" class="member-list"></div>
 
-      <div class="side-actions">
-        <button id="addMemberButton" class="dark-button">サロン生を追加</button>
-        <button id="resetButton" class="dark-button">サンプルに戻す</button>
-      </div>
     </aside>
 
     <main>
@@ -1685,35 +1681,6 @@ shota 平岩しょうた
     $("#sortByDue").addEventListener("click", () => {
       overviewSort = "due";
       renderOverview();
-    });
-
-    $("#addMemberButton").addEventListener("click", () => {
-      const result = promptMember();
-      if (!result) return;
-      const template = activeMember();
-      const member = {
-        id: uid("m"),
-        name: result.name,
-        note: result.note,
-        color: colors[state.members.length % colors.length],
-        chapters: template.chapters.map(chapter => ({
-          id: uid("c"),
-          title: chapter.title,
-          tasks: chapter.tasks.map(task => ({ id: uid("t"), title: task.title, done: false, due: task.due || "" }))
-        }))
-      };
-      state.members.push(member);
-      state.activeMemberId = member.id;
-      showToast("サロン生を追加しました");
-      render();
-    });
-
-    $("#resetButton").addEventListener("click", () => {
-      if (!confirm("保存済みデータを消してサンプルに戻しますか？")) return;
-      state = clone(sampleData);
-      localStorage.removeItem(STORAGE_KEY);
-      showToast("サンプルに戻しました");
-      render();
     });
 
     $("#focusChapterForm").addEventListener("click", () => $("#chapterName").focus());
