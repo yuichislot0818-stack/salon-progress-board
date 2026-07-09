@@ -49,6 +49,74 @@
       grid-template-columns: 282px 1fr;
     }
 
+    [hidden] { display: none !important; }
+
+    .app.personal-mode {
+      grid-template-columns: 1fr;
+    }
+
+    .app.personal-mode main {
+      width: 100%;
+      max-width: 1120px;
+      margin: 0 auto;
+    }
+
+    .app.personal-mode .workspace {
+      grid-template-columns: 1fr;
+    }
+
+    .app.personal-mode .overview,
+    .app.personal-mode .side-panel,
+    .app.personal-mode #focusChapterForm,
+    .app.personal-mode #completeAllButton,
+    .app.personal-mode #clearAllButton,
+    .app.personal-mode [data-fill-chapter],
+    .app.personal-mode [data-clear-chapter],
+    .app.personal-mode [data-delete-chapter],
+    .app.personal-mode [data-delete-task],
+    .app.personal-mode input[type="date"][data-due-task] {
+      display: none !important;
+    }
+
+    .app.personal-mode .task {
+      grid-template-columns: 28px 1fr;
+    }
+
+    .access-gate {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+    }
+
+    .access-card {
+      width: min(520px, 100%);
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: 22px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .access-card h1 {
+      font-size: 28px;
+    }
+
+    .access-card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .access-error {
+      color: var(--red);
+      font-size: 13px;
+      font-weight: 800;
+      min-height: 18px;
+    }
+
     .sidebar {
       background: var(--nav);
       color: #f8fafc;
@@ -680,8 +748,28 @@
   </style>
 </head>
 <body>
-  <div class="app">
-    <aside class="sidebar">
+  <section id="accessGate" class="access-gate">
+    <form id="accessForm" class="access-card">
+      <div class="brand" style="padding:0;color:var(--text)">
+        <div class="mark">進</div>
+        <div>
+          <strong>サロン進捗管理</strong>
+          <span>Personal Progress Page</span>
+        </div>
+      </div>
+      <h1>自分の進捗ページを開く</h1>
+      <p>登録されている表示名を入力すると、自分の章別タスクだけを確認できます。</p>
+      <div class="field">
+        <label for="accessName">登録名</label>
+        <input id="accessName" autocomplete="name" placeholder="例: 上条裕一">
+      </div>
+      <button class="primary" type="submit">自分のページを開く</button>
+      <div id="accessError" class="access-error"></div>
+    </form>
+  </section>
+
+  <div id="personalApp" class="app personal-mode" hidden>
+    <aside class="sidebar" hidden>
       <div class="brand">
         <div class="mark">進</div>
         <div>
@@ -698,15 +786,15 @@
     <main>
       <div class="topbar">
         <div>
-          <h1>サロン生の進捗をまとめて管理</h1>
-          <p class="lead">章別タスク、消化率、期限の近い課題、全員の進捗比較をひとつの画面で確認できます。</p>
+          <h1>あなたの進捗ページ</h1>
+          <p class="lead">自分の章別タスクと完了率だけを確認できます。完了した項目にチェックを入れて進めてください。</p>
         </div>
-        <button id="focusChapterForm" class="primary">章を追加</button>
+        <button id="switchMemberButton" class="primary">別の名前で開く</button>
       </div>
 
       <section id="stats" class="stats"></section>
 
-      <section class="panel overview">
+      <section class="panel overview" hidden>
         <div class="panel-head">
           <h2>全員の進捗一覧</h2>
           <div class="toolbar">
@@ -770,6 +858,7 @@
 
   <script>
     const STORAGE_KEY = "salon-progress-board-v1";
+    const PERSONAL_MEMBER_KEY = "salon-progress-personal-member-v1";
     const colors = ["#2f6fed", "#14946f", "#c98211", "#9b5de5", "#d14f3f"];
     let overviewSort = "progress";
     let openOverviewMemberId = "";
@@ -1207,6 +1296,11 @@ shota 平岩しょうた
     const profile = $("#profile");
     const chapterSelect = $("#chapterSelect");
     const toast = $("#toast");
+    const accessGate = $("#accessGate");
+    const personalApp = $("#personalApp");
+    const accessForm = $("#accessForm");
+    const accessName = $("#accessName");
+    const accessError = $("#accessError");
 
     function clone(value) {
       return JSON.parse(JSON.stringify(value));
@@ -1214,6 +1308,34 @@ shota 平岩しょうた
 
     function uid(prefix) {
       return prefix + "_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 7);
+    }
+
+    function normalizeName(value) {
+      return String(value || "").normalize("NFKC").toLowerCase().replace(/\s+/g, "");
+    }
+
+    function openPersonalPage(memberId) {
+      const member = state.members.find(item => item.id === memberId);
+      if (!member) return false;
+      state.activeMemberId = member.id;
+      localStorage.setItem(PERSONAL_MEMBER_KEY, member.id);
+      accessGate.hidden = true;
+      personalApp.hidden = false;
+      render();
+      return true;
+    }
+
+    function findPersonalMember(input) {
+      const query = normalizeName(input);
+      if (!query) return { error: "登録名を入力してください。" };
+
+      const exact = state.members.find(member => normalizeName(member.name) === query);
+      if (exact) return { member: exact };
+
+      const partial = state.members.filter(member => normalizeName(member.name).includes(query));
+      if (partial.length === 1) return { member: partial[0] };
+      if (partial.length > 1) return { error: "該当する名前が複数あります。登録名をもう少し正確に入力してください。" };
+      return { error: "登録名が見つかりませんでした。表記を確認してください。" };
     }
 
     function makeMemberFromTemplate(name, index, template) {
@@ -1502,15 +1624,11 @@ shota 平岩しょうた
       const progress = completion(member);
       const chapterCount = member.chapters.length;
       const doneChapters = member.chapters.filter(chapter => chapterCompletion(chapter).percent === 100).length;
-      const average = Math.round(state.members.reduce((sum, item) => sum + completion(item).percent, 0) / state.members.length);
-      const lateCount = state.members.reduce((sum, item) => sum + allTasks(item).filter(task => !task.done && dueClass(task) === "late").length, 0);
 
       stats.innerHTML = `
-        <div class="stat"><span>選択中の消化率</span><strong>${progress.percent}%</strong></div>
+        <div class="stat"><span>あなたの消化率</span><strong>${progress.percent}%</strong></div>
         <div class="stat"><span>完了タスク</span><strong>${progress.done}/${progress.total}</strong></div>
         <div class="stat"><span>完了した章</span><strong>${doneChapters}/${chapterCount}</strong></div>
-        <div class="stat"><span>全体平均</span><strong>${average}%</strong></div>
-        <div class="stat"><span>期限超過</span><strong>${lateCount}</strong></div>
       `;
     }
 
@@ -1673,6 +1791,25 @@ shota 平岩しょうた
 
     memberSearch.addEventListener("input", renderMembers);
 
+    accessForm.addEventListener("submit", event => {
+      event.preventDefault();
+      const result = findPersonalMember(accessName.value);
+      if (result.member) {
+        accessError.textContent = "";
+        openPersonalPage(result.member.id);
+      } else {
+        accessError.textContent = result.error;
+      }
+    });
+
+    $("#switchMemberButton").addEventListener("click", () => {
+      localStorage.removeItem(PERSONAL_MEMBER_KEY);
+      personalApp.hidden = true;
+      accessGate.hidden = false;
+      accessName.value = "";
+      accessName.focus();
+    });
+
     $("#sortByProgress").addEventListener("click", () => {
       overviewSort = "progress";
       renderOverview();
@@ -1682,8 +1819,6 @@ shota 平岩しょうた
       overviewSort = "due";
       renderOverview();
     });
-
-    $("#focusChapterForm").addEventListener("click", () => $("#chapterName").focus());
 
     $("#completeAllButton").addEventListener("click", () => {
       activeMember().chapters.forEach(chapter => chapter.tasks.forEach(task => task.done = true));
@@ -1809,7 +1944,13 @@ shota 平岩しょうた
       render();
     });
 
-    render();
+    const savedPersonalMemberId = localStorage.getItem(PERSONAL_MEMBER_KEY);
+    if (savedPersonalMemberId && openPersonalPage(savedPersonalMemberId)) {
+      accessGate.hidden = true;
+    } else {
+      personalApp.hidden = true;
+      accessGate.hidden = false;
+    }
     if ("serviceWorker" in navigator && location.protocol !== "file:") {
       window.addEventListener("load", () => {
         navigator.serviceWorker.register("./sw.js").catch(() => {});
