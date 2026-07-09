@@ -1372,7 +1372,7 @@ shota 平岩しょうた
     function makeFxChapter() {
       return {
         id: "c3",
-        title: "第3章 FX編",
+        title: "3章 FX",
         description: "〜緑のサロン生 タスク管理〜\n\nまずは「環境を整える」ことが最重要です。無料ボーナスを活用して実際にFXに触れ、操作に慣れる・注文方法を覚える・利益と損失の動きを理解することを目的に進めましょう。いきなり大きく稼ごうとせず、まずは経験値を積みます。",
         tasks: [
           { id: "fx_t1", title: "無料ボーナスを消化する", done: false, due: "" },
@@ -1422,8 +1422,8 @@ shota 平岩しょうた
 
     function makeAffiliateChapter() {
       return {
-        id: "c4",
-        title: "第4章 アフィリエイト編",
+        id: "c2",
+        title: "2章 アフィリエイト",
         description: "〜緑のサロン生 タスク管理〜\n\nポイントサイトとASPの登録を進め、アフィリエイトに取り組むための環境を整えます。登録だけで終わらせず、ログイン確認・案件確認・管理画面確認まで進めましょう。",
         tasks: [
           { id: "af_t1", title: "ハピタスに登録する", done: false, due: "" },
@@ -1444,6 +1444,68 @@ shota 平岩しょうた
           { id: "af_t16", title: "ASPLAY に登録する", done: false, due: "" }
         ]
       };
+    }
+
+    function makeBasicChapter() {
+      return {
+        id: "c1",
+        title: "1章 入会してすること",
+        description: "まずはサロン参加後の基本設定と確認を進めましょう。",
+        tasks: [
+          { id: "basic_t1", title: "サロン案内を確認する", done: false, due: "" },
+          { id: "basic_t2", title: "プロフィールを確認する", done: false, due: "" },
+          { id: "basic_t3", title: "学習環境を整える", done: false, due: "" },
+          { id: "basic_t4", title: "最初の進捗チェックをする", done: false, due: "" }
+        ]
+      };
+    }
+
+    function makeSimpleChapter(id, title) {
+      return {
+        id,
+        title,
+        description: "",
+        tasks: [
+          { id: `${id}_t1`, title: `${title.replace(/^\d+章\s*/, "")}を確認する`, done: false, due: "" },
+          { id: `${id}_t2`, title: `${title.replace(/^\d+章\s*/, "")}を実践する`, done: false, due: "" },
+          { id: `${id}_t3`, title: `${title.replace(/^\d+章\s*/, "")}を完了する`, done: false, due: "" }
+        ]
+      };
+    }
+
+    function makeCourseChapters() {
+      return [
+        makeBasicChapter(),
+        makeAffiliateChapter(),
+        makeFxChapter(),
+        makeSimpleChapter("c4", "4章 転売"),
+        makeSimpleChapter("c5", "5章 ポイ活"),
+        makeSimpleChapter("c6", "6章 お得情報"),
+        makeSimpleChapter("c7", "7章 AI"),
+        makeSimpleChapter("c8", "8章 スケール"),
+        makeSimpleChapter("c9", "9章 暗号資産"),
+        makeSimpleChapter("c10", "10章 最後に")
+      ];
+    }
+
+    function syncDoneStates(templateChapter, existingChapters) {
+      const existingTasks = existingChapters.flatMap(chapter => chapter.tasks || []);
+      return {
+        ...templateChapter,
+        tasks: templateChapter.tasks.map(task => {
+          const sameTask = existingTasks.find(existing => existing.title === task.title || existing.id === task.id);
+          return {
+            ...task,
+            done: sameTask ? Boolean(sameTask.done) : false,
+            due: sameTask?.due || task.due || ""
+          };
+        })
+      };
+    }
+
+    function applyCourseChapters(member) {
+      const existingChapters = member.chapters || [];
+      member.chapters = makeCourseChapters().map(chapter => syncDoneStates(chapter, existingChapters));
     }
 
     function ensureAffiliateChapter(member) {
@@ -1478,8 +1540,7 @@ shota 平岩しょうた
       if (!data.activeMemberId && data.members[0]) data.activeMemberId = data.members[0].id;
 
       data.members.forEach(member => {
-        ensureFxChapter(member);
-        ensureAffiliateChapter(member);
+        applyCourseChapters(member);
         member.chapters.forEach(chapter => {
           if (!("description" in chapter)) chapter.description = "";
           chapter.tasks.forEach(task => {
