@@ -1453,23 +1453,165 @@ shota 平岩しょうた
         description: "まずはサロン参加後の基本設定と確認を進めましょう。",
         tasks: [
           { id: "basic_t1", title: "サロン案内を確認する", done: false, due: "" },
-          { id: "basic_t2", title: "プロフィールを確認する", done: false, due: "" },
-          { id: "basic_t3", title: "学習環境を整える", done: false, due: "" },
-          { id: "basic_t4", title: "最初の進捗チェックをする", done: false, due: "" }
+          { id: "basic_t2", title: "利用ルールを確認する", done: false, due: "" },
+          { id: "basic_t3", title: "プロフィールを確認する", done: false, due: "" },
+          { id: "basic_t4", title: "通知設定を確認する", done: false, due: "" },
+          { id: "basic_t5", title: "学習環境を整える", done: false, due: "" },
+          { id: "basic_t6", title: "目標を決める", done: false, due: "" },
+          { id: "basic_t7", title: "進捗ページの使い方を確認する", done: false, due: "" },
+          { id: "basic_t8", title: "質問方法を確認する", done: false, due: "" },
+          { id: "basic_t9", title: "最初に取り組む章を確認する", done: false, due: "" },
+          { id: "basic_t10", title: "最初の進捗チェックをする", done: false, due: "" }
         ]
       };
     }
 
-    function makeSimpleChapter(id, title) {
-      return {
-        id,
+    function makeTaskList(prefix, titles) {
+      return titles.map((title, index) => ({
+        id: `${prefix}_t${index + 1}`,
         title,
-        description: "",
-        tasks: [
-          { id: `${id}_t1`, title: `${title.replace(/^\d+章\s*/, "")}を確認する`, done: false, due: "" },
-          { id: `${id}_t2`, title: `${title.replace(/^\d+章\s*/, "")}を実践する`, done: false, due: "" },
-          { id: `${id}_t3`, title: `${title.replace(/^\d+章\s*/, "")}を完了する`, done: false, due: "" }
-        ]
+        done: false,
+        due: ""
+      }));
+    }
+
+    function makeResaleChapter() {
+      return {
+        id: "c4",
+        title: "4章 転売",
+        description: "転売の基本準備から出品・販売・振り返りまで進めましょう。",
+        tasks: makeTaskList("resale", [
+          "転売の基本ルールを確認する",
+          "取り扱うジャンルを決める",
+          "仕入れ候補リストを作る",
+          "相場を調べる",
+          "利益計算の方法を確認する",
+          "仕入れ判断の基準を決める",
+          "販売先アカウントを確認する",
+          "商品写真の撮り方を確認する",
+          "商品説明文を作る",
+          "出品して販売まで進める"
+        ])
+      };
+    }
+
+    function makePointChapter() {
+      return {
+        id: "c5",
+        title: "5章 ポイ活",
+        description: "ポイントサイトを活用して、案件確認から実践まで進めましょう。",
+        tasks: makeTaskList("point", [
+          "ポイ活の基本を確認する",
+          "使うポイントサイトを整理する",
+          "登録済みサイトを確認する",
+          "案件一覧を確認する",
+          "条件が簡単な案件を選ぶ",
+          "案件条件をスクショまたはメモする",
+          "案件に申し込む",
+          "ポイント反映条件を確認する",
+          "獲得予定ポイントを記録する",
+          "完了案件を振り返る"
+        ])
+      };
+    }
+
+    function makeDealsChapter() {
+      return {
+        id: "c6",
+        title: "6章 お得情報",
+        description: "日常で使えるお得情報を確認し、実際に活用してみましょう。",
+        tasks: makeTaskList("deals", [
+          "お得情報の確認方法を覚える",
+          "キャンペーン情報を確認する",
+          "クーポン情報を確認する",
+          "キャッシュレス還元を確認する",
+          "固定費の見直し項目を確認する",
+          "買い物前に比較する習慣を作る",
+          "使えるキャンペーンを1つ選ぶ",
+          "実際にお得情報を活用する",
+          "節約できた金額を記録する",
+          "次に使うお得情報を決める"
+        ])
+      };
+    }
+
+    function makeAiChapter() {
+      return {
+        id: "c7",
+        title: "7章 AI",
+        description: "AIを使って作業効率を上げるための基本操作を進めましょう。",
+        tasks: makeTaskList("ai", [
+          "AIツールにログインする",
+          "基本的な質問を試す",
+          "文章作成を試す",
+          "要約を試す",
+          "アイデア出しを試す",
+          "SNS投稿文を作る",
+          "商品説明文を作る",
+          "作業チェックリストを作る",
+          "よく使うプロンプトを保存する",
+          "AIで時短できた作業を記録する"
+        ])
+      };
+    }
+
+    function makeScaleChapter() {
+      return {
+        id: "c8",
+        title: "8章 スケール",
+        description: "取り組みを広げるために、作業の型化と改善を進めましょう。",
+        tasks: makeTaskList("scale", [
+          "今の作業内容を整理する",
+          "時間がかかる作業を洗い出す",
+          "繰り返し作業をテンプレ化する",
+          "成果が出た作業を記録する",
+          "改善点を1つ決める",
+          "作業時間を測る",
+          "優先順位を決める",
+          "週の行動目標を決める",
+          "成果を確認する",
+          "次週の改善案を作る"
+        ])
+      };
+    }
+
+    function makeCryptoChapter() {
+      return {
+        id: "c9",
+        title: "9章 暗号資産",
+        description: "暗号資産に触れる前の基本知識と安全確認を進めましょう。",
+        tasks: makeTaskList("crypto", [
+          "暗号資産の基本用語を確認する",
+          "リスクについて確認する",
+          "取引所の種類を確認する",
+          "セキュリティ設定を確認する",
+          "二段階認証を確認する",
+          "ウォレットの基本を確認する",
+          "少額で触れる考え方を確認する",
+          "手数料を確認する",
+          "保管方法を確認する",
+          "学んだ内容をメモする"
+        ])
+      };
+    }
+
+    function makeFinalChapter() {
+      return {
+        id: "c10",
+        title: "10章 最後に",
+        description: "ここまでの取り組みを振り返り、次の行動につなげましょう。",
+        tasks: makeTaskList("final", [
+          "全章の進捗を確認する",
+          "未完了タスクを確認する",
+          "一番成果が出た章を振り返る",
+          "苦手だった章を振り返る",
+          "今後続けることを決める",
+          "次の目標を決める",
+          "質問したい内容を整理する",
+          "成果や気づきをメモする",
+          "次の1週間の行動を決める",
+          "最後の進捗チェックを完了する"
+        ])
       };
     }
 
@@ -1478,13 +1620,13 @@ shota 平岩しょうた
         makeBasicChapter(),
         makeAffiliateChapter(),
         makeFxChapter(),
-        makeSimpleChapter("c4", "4章 転売"),
-        makeSimpleChapter("c5", "5章 ポイ活"),
-        makeSimpleChapter("c6", "6章 お得情報"),
-        makeSimpleChapter("c7", "7章 AI"),
-        makeSimpleChapter("c8", "8章 スケール"),
-        makeSimpleChapter("c9", "9章 暗号資産"),
-        makeSimpleChapter("c10", "10章 最後に")
+        makeResaleChapter(),
+        makePointChapter(),
+        makeDealsChapter(),
+        makeAiChapter(),
+        makeScaleChapter(),
+        makeCryptoChapter(),
+        makeFinalChapter()
       ];
     }
 
