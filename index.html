@@ -588,6 +588,12 @@
       text-decoration: none;
     }
 
+    .task-link-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
     .task-image {
       display: block;
       width: 100%;
@@ -1479,7 +1485,9 @@ shota 平岩しょうた
             imageAlt: task.imageAlt || "",
             link: task.link || "",
             linkLabel: task.linkLabel || "",
-            detail: task.detail || ""
+            links: task.links || [],
+            detail: task.detail || "",
+            featureHint: task.featureHint || ""
           }))
         }))
       };
@@ -1585,7 +1593,19 @@ shota 平岩しょうた
           { id: "basic_t2", title: "紹介者に入会完了を報告する", done: false, due: "" },
           { id: "basic_t3", title: "紹介者と今後の進め方を確認する", done: false, due: "" },
           { id: "basic_t4", title: "親・紹介者とやり取りしてモチベーションを上げる", done: false, due: "" },
-          { id: "basic_t5", title: "LINEグループに参加する", done: false, due: "" },
+          { id: "basic_t5", title: "LINEグループに参加する", done: false, due: "", detail: "1〜3はニックネームOKです。①〜⑧の有料オープンチャットは、サロン生の確認のため漢字フルネームのみで参加してください。ニックネーム参加は承認されないため、2段階入力がある場合はフルネームを2回入力してください。", featureHint: "タップしてLINEグループ一覧を開く", links: [
+            { label: "1. でっぱちゃんねる みどりのサロン", href: "https://line.me/ti/g/V1IGsDFdej" },
+            { label: "2. レクチャーグループ みどりのサロン", href: "https://line.me/ti/g/_ydRbgEfrh" },
+            { label: "3. 無料初心者サロン 1500名以上", href: "https://x.gd/rOgzn" },
+            { label: "① FX・株 みどりのサロン", href: "https://x.gd/SpTfg" },
+            { label: "② アフィリエイト みどりのサロン", href: "https://x.gd/8ln0w" },
+            { label: "③ 仮想通貨 みどりのサロン", href: "https://x.gd/cEnBp" },
+            { label: "④ 株みどりのサロン", href: "https://x.gd/zyHm3" },
+            { label: "⑤ ポイ活・懸賞 みどりのサロン", href: "https://x.gd/y3yXN" },
+            { label: "⑥ 予約・抽選 みどりのサロン", href: "https://x.gd/AEKWw" },
+            { label: "⑦ お得情報 みどりのサロン", href: "https://x.gd/WjNoB" },
+            { label: "⑧ AIみどりのサロン", href: "https://x.gd/eeRPU" }
+          ] },
           { id: "basic_t6", title: "オープンチャットに参加する", done: false, due: "" },
           { id: "basic_t7", title: "過去のやり取りを少し確認する", done: false, due: "" },
           { id: "basic_t8", title: "できそうな案件があるか確認する", done: false, due: "" },
@@ -1776,7 +1796,9 @@ shota 平岩しょうた
             imageAlt: sameTask?.imageAlt || task.imageAlt || "",
             link: sameTask?.link || task.link || "",
             linkLabel: sameTask?.linkLabel || task.linkLabel || "",
-            detail: sameTask?.detail || task.detail || ""
+            links: sameTask?.links || task.links || [],
+            detail: sameTask?.detail || task.detail || "",
+            featureHint: sameTask?.featureHint || task.featureHint || ""
           };
         })
       };
@@ -1829,7 +1851,9 @@ shota 平岩しょうた
             if (!("imageAlt" in task)) task.imageAlt = "";
             if (!("link" in task)) task.link = "";
             if (!("linkLabel" in task)) task.linkLabel = "";
+            if (!("links" in task)) task.links = [];
             if (!("detail" in task)) task.detail = "";
+            if (!("featureHint" in task)) task.featureHint = "";
           });
         });
       });
@@ -2060,10 +2084,11 @@ shota 平岩しょうた
       chapters.innerHTML = member.chapters.map(chapter => {
         const progress = chapterCompletion(chapter);
         const tasks = chapter.tasks.map(task => {
-          const hasFeature = Boolean(task.detail || task.link || task.image);
+          const hasFeature = Boolean(task.detail || task.link || task.image || task.links?.length);
           const extras = `
             ${task.detail ? `<span class="task-note">${escapeHtml(task.detail)}</span>` : ""}
             ${task.link ? `<a class="task-link" href="${escapeHtml(task.link)}" target="_blank" rel="noopener">${escapeHtml(task.linkLabel || task.link)}</a>` : ""}
+            ${task.links?.length ? `<span class="task-link-list">${task.links.map(link => `<a class="task-link" href="${escapeHtml(link.href)}" target="_blank" rel="noopener">${escapeHtml(link.label)}</a>`).join("")}</span>` : ""}
             ${task.image ? `<img class="task-image" src="${escapeHtml(task.image)}" alt="${escapeHtml(task.imageAlt || task.title)}">` : ""}
             ${task.video ? `<video class="task-video" controls preload="metadata" src="${escapeHtml(task.video)}"></video>` : ""}
           `;
@@ -2072,7 +2097,7 @@ shota 平岩しょうた
               <summary>
                 <span class="feature-summary-main">
                   <strong>${escapeHtml(task.title)}</strong>
-                  <span>タップして画像と予約リンクを開く</span>
+                  <span>${escapeHtml(task.featureHint || "タップして詳細を開く")}</span>
                 </span>
                 <span class="feature-summary-action">開く</span>
               </summary>
