@@ -1,9 +1,10 @@
-const CACHE_NAME = "salon-progress-v10";
+const CACHE_NAME = "salon-progress-v11";
 const ASSETS = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
-  "./icon.svg"
+  "./icon.svg",
+  "./videos/bigboss-event.mp4"
 ];
 
 self.addEventListener("install", event => {

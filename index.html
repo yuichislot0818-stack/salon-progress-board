@@ -555,6 +555,16 @@
     .task-title { overflow-wrap: anywhere; }
     .task.done .task-title { color: var(--muted); text-decoration: line-through; }
 
+    .task-video {
+      display: block;
+      width: 100%;
+      max-width: 520px;
+      margin-top: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #0f172a;
+    }
+
     .side-panel {
       display: grid;
       gap: 16px;
@@ -1352,7 +1362,8 @@ shota 平岩しょうた
             id: uid("t"),
             title: task.title,
             done: false,
-            due: task.due || ""
+            due: task.due || "",
+            video: task.video || ""
           }))
         }))
       };
@@ -1401,7 +1412,8 @@ shota 平岩しょうた
           { id: "fx_t24", title: "fintokeiで取引をする", done: false, due: "" },
           { id: "fx_t25", title: "心配な場合は自分のお金を使わない進め方を選ぶ", done: false, due: "" },
           { id: "fx_t26", title: "ノーリスクの場合は利益が少なくなる点を確認する", done: false, due: "" },
-          { id: "fx_t27", title: "FX章の結果と次にやることを相談する", done: false, due: "" }
+          { id: "fx_t27", title: "FX章の結果と次にやることを相談する", done: false, due: "" },
+          { id: "fx_t28", title: "ビッグボスイベント動画を見る", done: false, due: "", video: "videos/bigboss-event.mp4" }
         ]
       };
     }
@@ -1642,7 +1654,8 @@ shota 平岩しょうた
           return {
             ...task,
             done: sameTask ? Boolean(sameTask.done) : false,
-            due: sameTask?.due || task.due || ""
+            due: sameTask?.due || task.due || "",
+            video: sameTask?.video || task.video || ""
           };
         })
       };
@@ -1690,6 +1703,7 @@ shota 平岩しょうた
           if (!("description" in chapter)) chapter.description = "";
           chapter.tasks.forEach(task => {
             if (!("due" in task)) task.due = "";
+            if (!("video" in task)) task.video = "";
           });
         });
       });
@@ -1922,7 +1936,11 @@ shota 平岩しょうた
         const tasks = chapter.tasks.map(task => `
           <label class="task ${task.done ? "done" : ""}">
             <input type="checkbox" data-chapter-id="${chapter.id}" data-task-id="${task.id}" ${task.done ? "checked" : ""}>
-            <span class="task-title">${escapeHtml(task.title)}<br><span class="due-note ${dueClass(task)}">期限: ${dueText(task)}</span></span>
+            <span class="task-title">
+              ${escapeHtml(task.title)}<br>
+              <span class="due-note ${dueClass(task)}">期限: ${dueText(task)}</span>
+              ${task.video ? `<video class="task-video" controls preload="metadata" src="${escapeHtml(task.video)}"></video>` : ""}
+            </span>
             <input type="date" value="${task.due || ""}" data-due-task="${task.id}" data-chapter-id="${chapter.id}" aria-label="期限">
             <button type="button" class="danger" data-delete-task="${task.id}" data-chapter-id="${chapter.id}">削除</button>
           </label>
