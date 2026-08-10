@@ -598,6 +598,84 @@
       background: white;
     }
 
+    .task.has-feature {
+      align-items: start;
+      background: linear-gradient(135deg, #fff8db 0%, #ffffff 45%, #eefbf3 100%);
+      border-color: rgba(31, 142, 74, 0.28);
+    }
+
+    .task-feature {
+      width: 100%;
+    }
+
+    .task-feature summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 48px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      list-style: none;
+      background: #111827;
+      color: white;
+    }
+
+    .task-feature summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .feature-summary-main {
+      display: grid;
+      gap: 3px;
+      min-width: 0;
+    }
+
+    .feature-summary-main strong,
+    .feature-summary-main span {
+      overflow-wrap: anywhere;
+    }
+
+    .feature-summary-main span {
+      color: rgba(255, 255, 255, 0.78);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .feature-summary-action {
+      flex: 0 0 auto;
+      padding: 6px 9px;
+      border-radius: 999px;
+      background: var(--green);
+      color: white;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .task-feature[open] summary {
+      border-radius: 8px 8px 0 0;
+    }
+
+    .task-feature[open] .feature-summary-action {
+      background: white;
+      color: var(--green);
+      font-size: 0;
+    }
+
+    .task-feature[open] .feature-summary-action::after {
+      content: "閉じる";
+      font-size: 12px;
+    }
+
+    .task-feature-panel {
+      padding: 12px 10px 4px;
+      border: 1px solid rgba(31, 142, 74, 0.22);
+      border-top: 0;
+      border-radius: 0 0 8px 8px;
+      background: rgba(255, 255, 255, 0.78);
+    }
+
     .side-panel {
       display: grid;
       gap: 16px;
@@ -1981,21 +2059,45 @@ shota 平岩しょうた
 
       chapters.innerHTML = member.chapters.map(chapter => {
         const progress = chapterCompletion(chapter);
-        const tasks = chapter.tasks.map(task => `
-          <div class="task ${task.done ? "done" : ""}">
-            <input type="checkbox" data-chapter-id="${chapter.id}" data-task-id="${task.id}" aria-label="${escapeHtml(task.title)}" ${task.done ? "checked" : ""}>
+        const tasks = chapter.tasks.map(task => {
+          const hasFeature = Boolean(task.detail || task.link || task.image);
+          const extras = `
+            ${task.detail ? `<span class="task-note">${escapeHtml(task.detail)}</span>` : ""}
+            ${task.link ? `<a class="task-link" href="${escapeHtml(task.link)}" target="_blank" rel="noopener">${escapeHtml(task.linkLabel || task.link)}</a>` : ""}
+            ${task.image ? `<img class="task-image" src="${escapeHtml(task.image)}" alt="${escapeHtml(task.imageAlt || task.title)}">` : ""}
+            ${task.video ? `<video class="task-video" controls preload="metadata" src="${escapeHtml(task.video)}"></video>` : ""}
+          `;
+          const taskBody = hasFeature ? `
+            <details class="task-feature">
+              <summary>
+                <span class="feature-summary-main">
+                  <strong>${escapeHtml(task.title)}</strong>
+                  <span>タップして画像と予約リンクを開く</span>
+                </span>
+                <span class="feature-summary-action">開く</span>
+              </summary>
+              <div class="task-feature-panel">
+                <span class="due-note ${dueClass(task)}">期限: ${dueText(task)}</span>
+                ${extras}
+              </div>
+            </details>
+          ` : `
             <span class="task-title">
               ${escapeHtml(task.title)}<br>
               <span class="due-note ${dueClass(task)}">期限: ${dueText(task)}</span>
-              ${task.detail ? `<span class="task-note">${escapeHtml(task.detail)}</span>` : ""}
-              ${task.link ? `<a class="task-link" href="${escapeHtml(task.link)}" target="_blank" rel="noopener">${escapeHtml(task.linkLabel || task.link)}</a>` : ""}
-              ${task.image ? `<img class="task-image" src="${escapeHtml(task.image)}" alt="${escapeHtml(task.imageAlt || task.title)}">` : ""}
               ${task.video ? `<video class="task-video" controls preload="metadata" src="${escapeHtml(task.video)}"></video>` : ""}
             </span>
-            <input type="date" value="${task.due || ""}" data-due-task="${task.id}" data-chapter-id="${chapter.id}" aria-label="期限">
-            <button type="button" class="danger" data-delete-task="${task.id}" data-chapter-id="${chapter.id}">削除</button>
-          </div>
-        `).join("");
+          `;
+
+          return `
+            <div class="task ${hasFeature ? "has-feature" : ""} ${task.done ? "done" : ""}">
+              <input type="checkbox" data-chapter-id="${chapter.id}" data-task-id="${task.id}" aria-label="${escapeHtml(task.title)}" ${task.done ? "checked" : ""}>
+              ${taskBody}
+              <input type="date" value="${task.due || ""}" data-due-task="${task.id}" data-chapter-id="${chapter.id}" aria-label="期限">
+              <button type="button" class="danger" data-delete-task="${task.id}" data-chapter-id="${chapter.id}">削除</button>
+            </div>
+          `;
+        }).join("");
 
         return `
           <article class="chapter">
