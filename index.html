@@ -565,6 +565,39 @@
       background: #0f172a;
     }
 
+    .task-note {
+      display: block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+      text-decoration: none;
+    }
+
+    .task-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 38px;
+      margin-top: 10px;
+      padding: 8px 12px;
+      border-radius: 7px;
+      background: var(--green);
+      color: white;
+      font-weight: 800;
+      text-decoration: none;
+    }
+
+    .task-image {
+      display: block;
+      width: 100%;
+      max-width: 520px;
+      margin-top: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: white;
+    }
+
     .side-panel {
       display: grid;
       gap: 16px;
@@ -1363,7 +1396,12 @@ shota 平岩しょうた
             title: task.title,
             done: false,
             due: task.due || "",
-            video: task.video || ""
+            video: task.video || "",
+            image: task.image || "",
+            imageAlt: task.imageAlt || "",
+            link: task.link || "",
+            linkLabel: task.linkLabel || "",
+            detail: task.detail || ""
           }))
         }))
       };
@@ -1473,7 +1511,7 @@ shota 平岩しょうた
           { id: "basic_t6", title: "オープンチャットに参加する", done: false, due: "" },
           { id: "basic_t7", title: "過去のやり取りを少し確認する", done: false, due: "" },
           { id: "basic_t8", title: "できそうな案件があるか確認する", done: false, due: "" },
-          { id: "basic_t9", title: "初心者の先生とZoomする", done: false, due: "" },
+          { id: "basic_t9", title: "初心者の先生とZoomする", done: false, due: "", detail: "完全無料で予約できます。自分に合った稼ぎ方や今の悩みをZoomで相談しましょう。", link: "https://timerex.net/s/jun.asano1977_ab33/100148ee", linkLabel: "無料でZoom予約する", image: "images/zoom-teacher-july15.jpg", imageAlt: "潤先生のZoomコンサル案内" },
           { id: "basic_t10", title: "Zoomで決めた内容を進める", done: false, due: "" },
           { id: "basic_t11", title: "届いた情報をまず試してみる", done: false, due: "" },
           { id: "basic_t12", title: "わからないことを相談する", done: false, due: "" }
@@ -1655,7 +1693,12 @@ shota 平岩しょうた
             ...task,
             done: sameTask ? Boolean(sameTask.done) : false,
             due: sameTask?.due || task.due || "",
-            video: sameTask?.video || task.video || ""
+            video: sameTask?.video || task.video || "",
+            image: sameTask?.image || task.image || "",
+            imageAlt: sameTask?.imageAlt || task.imageAlt || "",
+            link: sameTask?.link || task.link || "",
+            linkLabel: sameTask?.linkLabel || task.linkLabel || "",
+            detail: sameTask?.detail || task.detail || ""
           };
         })
       };
@@ -1704,6 +1747,11 @@ shota 平岩しょうた
           chapter.tasks.forEach(task => {
             if (!("due" in task)) task.due = "";
             if (!("video" in task)) task.video = "";
+            if (!("image" in task)) task.image = "";
+            if (!("imageAlt" in task)) task.imageAlt = "";
+            if (!("link" in task)) task.link = "";
+            if (!("linkLabel" in task)) task.linkLabel = "";
+            if (!("detail" in task)) task.detail = "";
           });
         });
       });
@@ -1934,16 +1982,19 @@ shota 平岩しょうた
       chapters.innerHTML = member.chapters.map(chapter => {
         const progress = chapterCompletion(chapter);
         const tasks = chapter.tasks.map(task => `
-          <label class="task ${task.done ? "done" : ""}">
-            <input type="checkbox" data-chapter-id="${chapter.id}" data-task-id="${task.id}" ${task.done ? "checked" : ""}>
+          <div class="task ${task.done ? "done" : ""}">
+            <input type="checkbox" data-chapter-id="${chapter.id}" data-task-id="${task.id}" aria-label="${escapeHtml(task.title)}" ${task.done ? "checked" : ""}>
             <span class="task-title">
               ${escapeHtml(task.title)}<br>
               <span class="due-note ${dueClass(task)}">期限: ${dueText(task)}</span>
+              ${task.detail ? `<span class="task-note">${escapeHtml(task.detail)}</span>` : ""}
+              ${task.link ? `<a class="task-link" href="${escapeHtml(task.link)}" target="_blank" rel="noopener">${escapeHtml(task.linkLabel || task.link)}</a>` : ""}
+              ${task.image ? `<img class="task-image" src="${escapeHtml(task.image)}" alt="${escapeHtml(task.imageAlt || task.title)}">` : ""}
               ${task.video ? `<video class="task-video" controls preload="metadata" src="${escapeHtml(task.video)}"></video>` : ""}
             </span>
             <input type="date" value="${task.due || ""}" data-due-task="${task.id}" data-chapter-id="${chapter.id}" aria-label="期限">
             <button type="button" class="danger" data-delete-task="${task.id}" data-chapter-id="${chapter.id}">削除</button>
-          </label>
+          </div>
         `).join("");
 
         return `

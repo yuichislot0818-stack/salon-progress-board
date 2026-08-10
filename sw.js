@@ -1,9 +1,10 @@
-const CACHE_NAME = "salon-progress-v11";
+const CACHE_NAME = "salon-progress-v12";
 const ASSETS = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
   "./icon.svg",
+  "./images/zoom-teacher-july15.jpg",
   "./videos/bigboss-event.mp4"
 ];
 
