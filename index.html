@@ -1651,18 +1651,29 @@ shota 平岩しょうた
         id: "c5",
         title: "5章 ポイ活",
         description: "ポイントサイトを活用して、案件確認から実践まで進めましょう。",
-        tasks: makeTaskList("point", [
-          "ポイ活の基本を確認する",
-          "使うポイントサイトを整理する",
-          "登録済みサイトを確認する",
-          "案件一覧を確認する",
-          "条件が簡単な案件を選ぶ",
-          "案件条件をスクショまたはメモする",
-          "案件に申し込む",
-          "ポイント反映条件を確認する",
-          "獲得予定ポイントを記録する",
-          "完了案件を振り返る"
-        ])
+        tasks: [
+          { id: "point_t1", title: "ポイ活の基本を確認する", done: false, due: "" },
+          { id: "point_t2", title: "使うポイントサイトを整理する", done: false, due: "", detail: "登録に使うポイントサイトの紹介リンクをまとめています。登録後は、ログインできるか・案件一覧を確認できるかまで進めましょう。Powlとコインカムは招待コードも確認してください。", featureHint: "タップしてポイントサイト一覧を開く", links: [
+            { label: "モッピー", href: "https://pc.moppy.jp/entry/invite.php?invite=339be126" },
+            { label: "ハピタス", href: "https://hapitas.jp/register/?i=20872573&route=text" },
+            { label: "ポイントタウン", href: "https://www.pointtown.com/registration?intrid=Cd6tBtMLF7wMv" },
+            { label: "アメフリ", href: "https://www.amefri.net/register?inv=f236240&openExternalBrowser=1" },
+            { label: "ecナビ", href: "https://ecnavi.jp/invite/?id=wknli" },
+            { label: "ワラウ", href: "https://www.warau.jp/friend/reg/WZm" },
+            { label: "Powl 招待コード: P7VQXJUN8S3", href: "https://go.onelink.me/kwez/invite" },
+            { label: "コインカム 招待コード: WnbOckfM", href: "https://cimcome.jp/join?code=e1eced0f1a6c6bffd6ddbaa60b0bc83c5adefc8cd086e723d0ebb43055b17442" },
+            { label: "ちょびりっち", href: "https://www.chobirich.com/cm/ad/?p=8224777069&i=4838527" },
+            { label: "ふぁんくる紹介", href: "https://www.fancrew.jp/about?inflow_id=fri_e12-5164354&lk=5164354&lk1=b&d=1" }
+          ] },
+          { id: "point_t3", title: "登録済みサイトを確認する", done: false, due: "" },
+          { id: "point_t4", title: "案件一覧を確認する", done: false, due: "" },
+          { id: "point_t5", title: "条件が簡単な案件を選ぶ", done: false, due: "" },
+          { id: "point_t6", title: "案件条件をスクショまたはメモする", done: false, due: "" },
+          { id: "point_t7", title: "案件に申し込む", done: false, due: "" },
+          { id: "point_t8", title: "ポイント反映条件を確認する", done: false, due: "" },
+          { id: "point_t9", title: "獲得予定ポイントを記録する", done: false, due: "" },
+          { id: "point_t10", title: "完了案件を振り返る", done: false, due: "" }
+        ]
       };
     }
 
