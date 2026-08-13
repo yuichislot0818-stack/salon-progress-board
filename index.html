@@ -1510,7 +1510,9 @@ shota 平岩しょうた
         title: "3章 FX",
         description: "FXの動画で全体像を確認し、無料登録でもらえるボーナスや入金ボーナスを活用しながら、リスクの取り方を選んで実際の取引経験を積みましょう。心配な場合はノーリスクの進め方、自信がある場合は自己資金での取引へ進みます。",
         tasks: [
-          { id: "fx_t1", title: "FX動画のまとめを見る", done: false, due: "" },
+          { id: "fx_t1", title: "FX動画のまとめを見る", done: false, due: "", detail: "第3章のFX動画まとめはこちらから確認してください。見終わったらチェックを入れましょう。", featureHint: "タップしてFX動画まとめを開く", links: [
+            { label: "FX動画アカデミーを開く", href: "https://fxvideoacademy-gyyhddzg.manus.space/" }
+          ] },
           { id: "fx_t2", title: "FXの流れと注意点を確認する", done: false, due: "" },
           { id: "fx_t3", title: "無料登録でボーナスがもらえる会社を確認する", done: false, due: "" },
           { id: "fx_t4", title: "無料登録できる会社に順番に登録する", done: false, due: "" },
@@ -1807,7 +1809,7 @@ shota 平岩しょうた
             imageAlt: sameTask?.imageAlt || task.imageAlt || "",
             link: sameTask?.link || task.link || "",
             linkLabel: sameTask?.linkLabel || task.linkLabel || "",
-            links: sameTask?.links || task.links || [],
+            links: sameTask?.links?.length ? sameTask.links : task.links || [],
             detail: sameTask?.detail || task.detail || "",
             featureHint: sameTask?.featureHint || task.featureHint || ""
           };
