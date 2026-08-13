@@ -594,6 +594,30 @@
       margin-top: 10px;
     }
 
+    .bonus-company-list {
+      display: grid;
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .bonus-company {
+      padding: 12px;
+      border: 1px solid rgba(31, 142, 74, 0.18);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.72);
+    }
+
+    .bonus-company strong {
+      display: block;
+      color: var(--ink);
+      font-size: 15px;
+      margin-bottom: 6px;
+    }
+
+    .bonus-company .task-note {
+      margin-top: 0;
+    }
+
     .task-image {
       display: block;
       width: 100%;
@@ -1486,6 +1510,7 @@ shota 平岩しょうた
             link: task.link || "",
             linkLabel: task.linkLabel || "",
             links: task.links || [],
+            bonusCompanies: task.bonusCompanies || [],
             detail: task.detail || "",
             featureHint: task.featureHint || ""
           }))
@@ -1514,40 +1539,39 @@ shota 平岩しょうた
             { label: "FX動画アカデミーを開く", href: "https://fxvideoacademy-gyyhddzg.manus.space/" }
           ] },
           { id: "fx_t2", title: "FXの流れと注意点を確認する", done: false, due: "" },
-          { id: "fx_t3", title: "無料登録でボーナスがもらえる会社を確認する", done: false, due: "", detail: `FX無料ボーナス一覧
-
-《XMTrading》
-ボーナス額 13,000円
+          { id: "fx_t3", title: "無料登録でボーナスがもらえる会社を確認する", done: false, due: "", detail: "FX無料ボーナス一覧です。金額は変更になる可能性があります。詳細や適用条件については各キャンペーン内容をご確認ください。", featureHint: "タップしてFX無料ボーナス一覧を開く", bonusCompanies: [
+            { name: "XMTrading", detail: `ボーナス額 13,000円
 開催期限 無期限
 対象口座 プラットフォーム MT4 or MT5 / 種類 スタンダード / レバレッジ 1:1000 / 通貨 JPY
 ボーナス利益出金条件 0.1ロット以上でエントリー / 最低10分以上のポジション保有
 推奨利確額 13,000円〜
 ボーナス出金可能額 10,000円〜
 出金上限額 無し
-出金手数料 2,500円
-
-《Bigboss》
-ボーナス額 15,000円
+出金手数料 2,500円`, links: [
+              { label: "XMTrading 開設", href: "https://www.xmtrading.com/jp/?prln=1" }
+            ] },
+            { name: "Bigboss", detail: `ボーナス額 15,000円
 ボーナス利益出金条件 特になし
 開催期限 無期限
 対象口座 スタンダード口座
 推奨利確額 15,000円〜
 ボーナス出金可能額 なし
 出金上限額 無し
-出金手数料 2,000円
-
-《FXGT》
-ボーナス額 10,000円
+出金手数料 2,000円`, links: [
+              { label: "Bigboss 開設", href: "https://www.bigboss-financial.com/ja?aid=8UOjG8lJ" },
+              { label: "Bigboss 参考URL", href: "https://www.bigboss-financial.com/new-account-opening-bonus" }
+            ] },
+            { name: "FXGT", detail: `ボーナス額 10,000円
 ボーナス出金条件 合計3ロット以上の取引 / 合計8回以上の取引
 開催期限 無期限
 対象口座 プラットフォーム MT4 or MT5 / 種類 スタンダード / レバレッジ 1:1000 / 通貨 JPY
 推奨利確額 20,000円〜
 ボーナス利益出金可能額 10,000円〜
 出金上限額 無し
-出金手数料 無料
-
-《Vantage Trading》
-ボーナス額 15,000円
+出金手数料 無料`, links: [
+              { label: "FXGT 開設", href: "https://portal.fxgt.com/register?refid=8896" }
+            ] },
+            { name: "Vantage Trading", detail: `ボーナス額 15,000円
 開設 タリタリ経由
 ボーナス出金条件 合計3ロット以上の取引 / ポジション保有時間5分以上 / 最大10,000円までの利益分のみ
 入金して1回でも取引すれば無制限に出金可能
@@ -1556,9 +1580,10 @@ shota 平岩しょうた
 推奨利確額 20,000円〜
 ボーナス出金可能額 30ドル〜
 出金上限額 10,000円 未入金の場合
-出金手数料 無し
-
-《IS6FX》キャンペーン期間中のみ
+出金手数料 無し`, links: [
+              { label: "Vantage Trading 開設", href: "https://taritali.com/client/click.php?id=37482" }
+            ] },
+            { name: "IS6FX", detail: `キャンペーン期間中のみ
 ボーナス額 13,000円
 ボーナス利益出金条件 合計2ロット以上の取引 / 最低10分以上のポジション保有
 開催期限 無期限
@@ -1566,32 +1591,22 @@ shota 平岩しょうた
 推奨利確額 15,000円〜
 ボーナス出金可能額 5,000円〜
 出金上限額 無し
-出金手数料 無し
-
-《MYFX》
-ボーナス額 15,000円
-
-《アキシオリー》
-本人確認して数日後 15,000円
-
-《アイフォレックス》
-ボーナス額 20,000円
-3日でボーナスが消えるため、残高を0にするくらいのトレードがおすすめ
-
-《AXONFX》
-ボーナス額 10,000円
-
-※金額は変更になる可能性があります。詳細や適用条件については各キャンペーン内容をご確認ください。`, featureHint: "タップしてFX無料ボーナス一覧を開く", links: [
-            { label: "XMTrading 開設", href: "https://www.xmtrading.com/jp/?prln=1" },
-            { label: "Bigboss 開設", href: "https://www.bigboss-financial.com/ja?aid=8UOjG8lJ" },
-            { label: "Bigboss 参考URL", href: "https://www.bigboss-financial.com/new-account-opening-bonus" },
-            { label: "FXGT 開設", href: "https://portal.fxgt.com/register?refid=8896" },
-            { label: "Vantage Trading 開設", href: "https://taritali.com/client/click.php?id=37482" },
-            { label: "IS6FX 開設", href: "https://is6.com/ja/campaign/register?ib=hq5cTDwH" },
-            { label: "MYFX キャンペーン", href: "https://fxsignup.com/campaign/myf/24070401.html" },
-            { label: "アキシオリー 開設", href: "https://go.axiory.com/afs/come.php?cid=5177&ctgid=100&atype=1&brandid=3" },
-            { label: "アイフォレックス", href: "https://fx-trade.co.jp/iforex-bonus/" },
-            { label: "AXONFX", href: "https://www.axonmarkets.com/media/lp/axonmarkets-official/" }
+出金手数料 無し`, links: [
+              { label: "IS6FX 開設", href: "https://is6.com/ja/campaign/register?ib=hq5cTDwH" }
+            ] },
+            { name: "MYFX", detail: "ボーナス額 15,000円", links: [
+              { label: "MYFX キャンペーン", href: "https://fxsignup.com/campaign/myf/24070401.html" }
+            ] },
+            { name: "アキシオリー", detail: "本人確認して数日後 15,000円", links: [
+              { label: "アキシオリー 開設", href: "https://go.axiory.com/afs/come.php?cid=5177&ctgid=100&atype=1&brandid=3" }
+            ] },
+            { name: "アイフォレックス", detail: `ボーナス額 20,000円
+3日でボーナスが消えるため、残高を0にするくらいのトレードがおすすめ`, links: [
+              { label: "アイフォレックス", href: "https://fx-trade.co.jp/iforex-bonus/" }
+            ] },
+            { name: "AXONFX", detail: "ボーナス額 10,000円", links: [
+              { label: "AXONFX", href: "https://www.axonmarkets.com/media/lp/axonmarkets-official/" }
+            ] }
           ] },
           { id: "fx_t4", title: "無料登録できる会社に順番に登録する", done: false, due: "" },
           { id: "fx_t5", title: "登録後にログイン確認をする", done: false, due: "" },
@@ -1878,6 +1893,7 @@ shota 平岩しょうた
         ...templateChapter,
         tasks: templateChapter.tasks.map(task => {
           const sameTask = existingTasks.find(existing => existing.title === task.title || existing.id === task.id);
+          const useTemplateFeature = Boolean(task.bonusCompanies?.length);
           return {
             ...task,
             done: sameTask ? Boolean(sameTask.done) : false,
@@ -1887,9 +1903,10 @@ shota 平岩しょうた
             imageAlt: sameTask?.imageAlt || task.imageAlt || "",
             link: sameTask?.link || task.link || "",
             linkLabel: sameTask?.linkLabel || task.linkLabel || "",
-            links: sameTask?.links?.length ? sameTask.links : task.links || [],
-            detail: sameTask?.detail || task.detail || "",
-            featureHint: sameTask?.featureHint || task.featureHint || ""
+            links: useTemplateFeature ? task.links || [] : sameTask?.links?.length ? sameTask.links : task.links || [],
+            bonusCompanies: useTemplateFeature ? task.bonusCompanies || [] : sameTask?.bonusCompanies?.length ? sameTask.bonusCompanies : task.bonusCompanies || [],
+            detail: useTemplateFeature ? task.detail || "" : sameTask?.detail || task.detail || "",
+            featureHint: useTemplateFeature ? task.featureHint || "" : sameTask?.featureHint || task.featureHint || ""
           };
         })
       };
@@ -1943,6 +1960,7 @@ shota 平岩しょうた
             if (!("link" in task)) task.link = "";
             if (!("linkLabel" in task)) task.linkLabel = "";
             if (!("links" in task)) task.links = [];
+            if (!("bonusCompanies" in task)) task.bonusCompanies = [];
             if (!("detail" in task)) task.detail = "";
             if (!("featureHint" in task)) task.featureHint = "";
           });
@@ -2175,11 +2193,20 @@ shota 平岩しょうた
       chapters.innerHTML = member.chapters.map(chapter => {
         const progress = chapterCompletion(chapter);
         const tasks = chapter.tasks.map(task => {
-          const hasFeature = Boolean(task.detail || task.link || task.image || task.links?.length);
+          const hasFeature = Boolean(task.detail || task.link || task.image || task.links?.length || task.bonusCompanies?.length);
+          const renderLinks = links => links?.length ? `<span class="task-link-list">${links.map(link => `<a class="task-link" href="${escapeHtml(link.href)}" target="_blank" rel="noopener">${escapeHtml(link.label)}</a>`).join("")}</span>` : "";
+          const bonusCompanies = task.bonusCompanies?.length ? `<span class="bonus-company-list">${task.bonusCompanies.map(company => `
+            <span class="bonus-company">
+              <strong>${escapeHtml(company.name)}</strong>
+              ${company.detail ? `<span class="task-note">${escapeHtml(company.detail)}</span>` : ""}
+              ${renderLinks(company.links)}
+            </span>
+          `).join("")}</span>` : "";
           const extras = `
             ${task.detail ? `<span class="task-note">${escapeHtml(task.detail)}</span>` : ""}
             ${task.link ? `<a class="task-link" href="${escapeHtml(task.link)}" target="_blank" rel="noopener">${escapeHtml(task.linkLabel || task.link)}</a>` : ""}
-            ${task.links?.length ? `<span class="task-link-list">${task.links.map(link => `<a class="task-link" href="${escapeHtml(link.href)}" target="_blank" rel="noopener">${escapeHtml(link.label)}</a>`).join("")}</span>` : ""}
+            ${renderLinks(task.links)}
+            ${bonusCompanies}
             ${task.image ? `<img class="task-image" src="${escapeHtml(task.image)}" alt="${escapeHtml(task.imageAlt || task.title)}">` : ""}
             ${task.video ? `<video class="task-video" controls preload="metadata" src="${escapeHtml(task.video)}"></video>` : ""}
           `;
