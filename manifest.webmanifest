@@ -7,6 +7,34 @@
   "background_color": "#f5f7fb",
   "theme_color": "#121821",
   "description": "サロン生の章別タスクと進捗率を管理するアプリです。",
+  "shortcuts": [
+    {
+      "name": "サロン生ページを開く",
+      "short_name": "サロン生",
+      "description": "サロン生の個人進捗ページを開きます。",
+      "url": "./index.html",
+      "icons": [
+        {
+          "src": "icon.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "管理者ページを開く",
+      "short_name": "管理者",
+      "description": "管理者用の進捗一覧ページを開きます。",
+      "url": "./index.html?admin=1",
+      "icons": [
+        {
+          "src": "icon.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
+        }
+      ]
+    }
+  ],
   "icons": [
     {
       "src": "icon.svg",
