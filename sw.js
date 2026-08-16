@@ -1,4 +1,4 @@
-const CACHE_NAME = "salon-progress-v21";
+const CACHE_NAME = "salon-progress-v22";
 const ASSETS = [
   "./",
   "./index.html",

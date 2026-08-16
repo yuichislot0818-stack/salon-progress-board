@@ -454,10 +454,16 @@
 
     .chapter-summary {
       display: grid;
+      width: 100%;
       grid-template-columns: 1fr auto;
       gap: 14px;
       align-items: center;
       padding: 18px 16px;
+      border: 0;
+      background: transparent;
+      color: inherit;
+      font: inherit;
+      text-align: left;
       cursor: pointer;
       list-style: none;
       user-select: none;
@@ -484,13 +490,13 @@
       white-space: nowrap;
     }
 
-    .chapter[open] .chapter-toggle {
+    .chapter.open .chapter-toggle {
       background: #fff1f1;
       color: var(--red);
     }
 
     .chapter-toggle::before { content: "開く"; }
-    .chapter[open] .chapter-toggle::before { content: "閉じる"; }
+    .chapter.open .chapter-toggle::before { content: "閉じる"; }
 
     .chapter-title {
       display: flex;
@@ -2237,10 +2243,10 @@ shota 平岩しょうた
         return;
       }
 
-      const shouldForceClosed = openChapterIds.size === 0;
       chapters.innerHTML = member.chapters.map(chapter => {
         const progress = chapterCompletion(chapter);
         const chapterKey = `${member.id}:${chapter.id}`;
+        const isOpen = openChapterIds.has(chapterKey);
         const tasks = chapter.tasks.map(task => {
           const hasFeature = Boolean(task.detail || task.link || task.image || task.links?.length || task.bonusCompanies?.length);
           const renderLinks = links => links?.length ? `<span class="task-link-list">${links.map(link => `<a class="task-link" href="${escapeHtml(link.href)}" target="_blank" rel="noopener">${escapeHtml(link.label)}</a>`).join("")}</span>` : "";
@@ -2292,8 +2298,8 @@ shota 平岩しょうた
         }).join("");
 
         return `
-          <details class="chapter" data-chapter-panel="${chapter.id}" ${openChapterIds.has(chapterKey) ? "open" : ""}>
-            <summary class="chapter-summary">
+          <article class="chapter ${isOpen ? "open" : ""}" data-chapter-panel="${chapter.id}">
+            <button class="chapter-summary" type="button" data-toggle-chapter="${chapter.id}" aria-expanded="${isOpen ? "true" : "false"}">
               <div>
                 <div class="chapter-title">
                   <strong>${escapeHtml(chapter.title)}</strong>
@@ -2303,7 +2309,8 @@ shota 平岩しょうた
                 <p class="chapter-meta">${progress.total}個中 ${progress.done}個完了</p>
               </div>
               <span class="chapter-toggle" aria-hidden="true"></span>
-            </summary>
+            </button>
+            ${isOpen ? `
             <div class="chapter-body">
               ${chapter.description ? `<p class="chapter-description">${escapeHtml(chapter.description)}</p>` : ""}
               <div class="toolbar">
@@ -2313,20 +2320,10 @@ shota 平岩しょうた
               </div>
               <div class="tasks">${tasks || `<div class="empty">この章にはまだタスクがありません。</div>`}</div>
             </div>
-          </details>
+            ` : ""}
+          </article>
         `;
       }).join("");
-
-      if (shouldForceClosed) {
-        chapters.querySelectorAll(".chapter").forEach(chapter => {
-          chapter.open = false;
-        });
-        requestAnimationFrame(() => {
-          chapters.querySelectorAll(".chapter").forEach(chapter => {
-            chapter.open = false;
-          });
-        });
-      }
     }
 
     function renderChapterSelect() {
@@ -2464,23 +2461,24 @@ shota 平岩しょうた
       }
     });
 
-    chapters.addEventListener("toggle", event => {
-      const detail = event.target.closest("[data-chapter-panel]");
-      if (!detail || event.target !== detail) return;
-      const key = `${activeMember().id}:${detail.dataset.chapterPanel}`;
-      if (detail.open) {
-        openChapterIds.add(key);
-      } else {
-        openChapterIds.delete(key);
-      }
-    }, true);
-
     chapters.addEventListener("click", event => {
       const member = activeMember();
+      const toggleChapter = event.target.closest("[data-toggle-chapter]");
       const deleteTask = event.target.closest("[data-delete-task]");
       const fillChapter = event.target.closest("[data-fill-chapter]");
       const clearChapter = event.target.closest("[data-clear-chapter]");
       const deleteChapter = event.target.closest("[data-delete-chapter]");
+
+      if (toggleChapter) {
+        const key = `${member.id}:${toggleChapter.dataset.toggleChapter}`;
+        if (openChapterIds.has(key)) {
+          openChapterIds.delete(key);
+        } else {
+          openChapterIds.add(key);
+        }
+        render();
+        return;
+      }
 
       if (deleteTask) {
         const chapter = member.chapters.find(item => item.id === deleteTask.dataset.chapterId);
