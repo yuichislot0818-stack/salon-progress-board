@@ -1,7 +1,7 @@
 {
   "name": "サロン進捗管理",
   "short_name": "進捗管理",
-  "start_url": "./index.html",
+  "start_url": "./member.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#f5f7fb",
@@ -12,7 +12,7 @@
       "name": "サロン生ページを開く",
       "short_name": "サロン生",
       "description": "サロン生の個人進捗ページを開きます。",
-      "url": "./index.html",
+      "url": "./member.html",
       "icons": [
         {
           "src": "icon.svg",
@@ -25,7 +25,7 @@
       "name": "管理者ページを開く",
       "short_name": "管理者",
       "description": "管理者用の進捗一覧ページを開きます。",
-      "url": "./index.html?admin=1",
+      "url": "./admin.html",
       "icons": [
         {
           "src": "icon.svg",
