@@ -2237,6 +2237,7 @@ shota 平岩しょうた
         return;
       }
 
+      const shouldForceClosed = openChapterIds.size === 0;
       chapters.innerHTML = member.chapters.map(chapter => {
         const progress = chapterCompletion(chapter);
         const chapterKey = `${member.id}:${chapter.id}`;
@@ -2315,6 +2316,17 @@ shota 平岩しょうた
           </details>
         `;
       }).join("");
+
+      if (shouldForceClosed) {
+        chapters.querySelectorAll(".chapter").forEach(chapter => {
+          chapter.open = false;
+        });
+        requestAnimationFrame(() => {
+          chapters.querySelectorAll(".chapter").forEach(chapter => {
+            chapter.open = false;
+          });
+        });
+      }
     }
 
     function renderChapterSelect() {
