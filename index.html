@@ -560,6 +560,11 @@
       padding-bottom: 18px;
     }
 
+    .chapter:not(.open) .chapter-body,
+    .chapter:not(.open) .tasks {
+      display: none !important;
+    }
+
     .chapter-body > .chapter-description {
       margin: 0 16px 12px;
     }
@@ -1067,7 +1072,7 @@
     const colors = ["#2f6fed", "#14946f", "#c98211", "#9b5de5", "#d14f3f"];
     let overviewSort = "progress";
     let openOverviewMemberId = "";
-    let openChapterIds = new Set();
+    let openChapterId = "";
 
     const salonMemberNames = `
 愛 樋口愛美いくみ
@@ -1524,7 +1529,7 @@ shota 平岩しょうた
       const member = state.members.find(item => item.id === memberId);
       if (!member) return false;
       state.activeMemberId = member.id;
-      openChapterIds = new Set();
+      openChapterId = "";
       localStorage.setItem(PERSONAL_MEMBER_KEY, member.id);
       accessGate.hidden = true;
       personalApp.hidden = false;
@@ -2245,8 +2250,7 @@ shota 平岩しょうた
 
       chapters.innerHTML = member.chapters.map(chapter => {
         const progress = chapterCompletion(chapter);
-        const chapterKey = `${member.id}:${chapter.id}`;
-        const isOpen = openChapterIds.has(chapterKey);
+        const isOpen = openChapterId === chapter.id;
         const tasks = chapter.tasks.map(task => {
           const hasFeature = Boolean(task.detail || task.link || task.image || task.links?.length || task.bonusCompanies?.length);
           const renderLinks = links => links?.length ? `<span class="task-link-list">${links.map(link => `<a class="task-link" href="${escapeHtml(link.href)}" target="_blank" rel="noopener">${escapeHtml(link.label)}</a>`).join("")}</span>` : "";
@@ -2352,7 +2356,7 @@ shota 平岩しょうた
       if (!button) return;
       state.activeMemberId = button.dataset.memberId;
       openOverviewMemberId = "";
-      openChapterIds = new Set();
+      openChapterId = "";
       render();
     });
 
@@ -2470,12 +2474,7 @@ shota 平岩しょうた
       const deleteChapter = event.target.closest("[data-delete-chapter]");
 
       if (toggleChapter) {
-        const key = `${member.id}:${toggleChapter.dataset.toggleChapter}`;
-        if (openChapterIds.has(key)) {
-          openChapterIds.delete(key);
-        } else {
-          openChapterIds.add(key);
-        }
+        openChapterId = openChapterId === toggleChapter.dataset.toggleChapter ? "" : toggleChapter.dataset.toggleChapter;
         render();
         return;
       }
@@ -2548,6 +2547,12 @@ shota 平岩しょうた
       window.addEventListener("load", () => {
         navigator.serviceWorker.register("./sw.js").then(registration => registration.update()).catch(() => {});
       });
+    }
+
+    if ("caches" in window) {
+      caches.keys().then(keys => {
+        keys.filter(key => key.startsWith("salon-progress-") && key !== "salon-progress-v22").forEach(key => caches.delete(key));
+      }).catch(() => {});
     }
   </script>
 </body>
