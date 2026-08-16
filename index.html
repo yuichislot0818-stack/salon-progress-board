@@ -458,7 +458,39 @@
       gap: 14px;
       align-items: center;
       padding: 18px 16px;
+      cursor: pointer;
+      list-style: none;
+      user-select: none;
     }
+
+    .chapter-summary::-webkit-details-marker { display: none; }
+
+    .chapter-summary:hover {
+      background: #f8fafc;
+    }
+
+    .chapter-toggle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 62px;
+      min-height: 34px;
+      padding: 0 12px;
+      border-radius: 999px;
+      background: #eefbf3;
+      color: var(--green);
+      font-size: 13px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .chapter[open] .chapter-toggle {
+      background: #fff1f1;
+      color: var(--red);
+    }
+
+    .chapter-toggle::before { content: "開く"; }
+    .chapter[open] .chapter-toggle::before { content: "閉じる"; }
 
     .chapter-title {
       display: flex;
@@ -518,6 +550,18 @@
       white-space: pre-line;
     }
 
+    .chapter-body {
+      padding-bottom: 18px;
+    }
+
+    .chapter-body > .chapter-description {
+      margin: 0 16px 12px;
+    }
+
+    .chapter-body > .toolbar {
+      padding: 0 16px 12px;
+    }
+
     .due-note.late { color: var(--red); font-weight: 800; }
     .due-note.soon { color: var(--amber); font-weight: 800; }
 
@@ -525,6 +569,10 @@
       display: grid;
       gap: 8px;
       padding: 0 16px 18px;
+    }
+
+    .chapter-body .tasks {
+      padding-bottom: 0;
     }
 
     .task {
@@ -1013,6 +1061,7 @@
     const colors = ["#2f6fed", "#14946f", "#c98211", "#9b5de5", "#d14f3f"];
     let overviewSort = "progress";
     let openOverviewMemberId = "";
+    let openChapterIds = new Set();
 
     const salonMemberNames = `
 愛 樋口愛美いくみ
@@ -1469,6 +1518,7 @@ shota 平岩しょうた
       const member = state.members.find(item => item.id === memberId);
       if (!member) return false;
       state.activeMemberId = member.id;
+      openChapterIds = new Set();
       localStorage.setItem(PERSONAL_MEMBER_KEY, member.id);
       accessGate.hidden = true;
       personalApp.hidden = false;
@@ -2189,6 +2239,7 @@ shota 平岩しょうた
 
       chapters.innerHTML = member.chapters.map(chapter => {
         const progress = chapterCompletion(chapter);
+        const chapterKey = `${member.id}:${chapter.id}`;
         const tasks = chapter.tasks.map(task => {
           const hasFeature = Boolean(task.detail || task.link || task.image || task.links?.length || task.bonusCompanies?.length);
           const renderLinks = links => links?.length ? `<span class="task-link-list">${links.map(link => `<a class="task-link" href="${escapeHtml(link.href)}" target="_blank" rel="noopener">${escapeHtml(link.label)}</a>`).join("")}</span>` : "";
@@ -2240,8 +2291,8 @@ shota 平岩しょうた
         }).join("");
 
         return `
-          <article class="chapter">
-            <div class="chapter-summary">
+          <details class="chapter" data-chapter-panel="${chapter.id}" ${openChapterIds.has(chapterKey) ? "open" : ""}>
+            <summary class="chapter-summary">
               <div>
                 <div class="chapter-title">
                   <strong>${escapeHtml(chapter.title)}</strong>
@@ -2249,16 +2300,19 @@ shota 平岩しょうた
                 </div>
                 <div class="progress-track"><div class="progress-fill" style="width:${progress.percent}%"></div></div>
                 <p class="chapter-meta">${progress.total}個中 ${progress.done}個完了</p>
-                ${chapter.description ? `<p class="chapter-description">${escapeHtml(chapter.description)}</p>` : ""}
               </div>
+              <span class="chapter-toggle" aria-hidden="true"></span>
+            </summary>
+            <div class="chapter-body">
+              ${chapter.description ? `<p class="chapter-description">${escapeHtml(chapter.description)}</p>` : ""}
               <div class="toolbar">
                 <button class="ghost" data-fill-chapter="${chapter.id}">章を完了</button>
                 <button class="ghost" data-clear-chapter="${chapter.id}">章を解除</button>
                 <button class="danger" data-delete-chapter="${chapter.id}">章を削除</button>
               </div>
+              <div class="tasks">${tasks || `<div class="empty">この章にはまだタスクがありません。</div>`}</div>
             </div>
-            <div class="tasks">${tasks || `<div class="empty">この章にはまだタスクがありません。</div>`}</div>
-          </article>
+          </details>
         `;
       }).join("");
     }
@@ -2289,6 +2343,7 @@ shota 平岩しょうた
       if (!button) return;
       state.activeMemberId = button.dataset.memberId;
       openOverviewMemberId = "";
+      openChapterIds = new Set();
       render();
     });
 
@@ -2397,6 +2452,17 @@ shota 平岩しょうた
       }
     });
 
+    chapters.addEventListener("toggle", event => {
+      const detail = event.target.closest("[data-chapter-panel]");
+      if (!detail || event.target !== detail) return;
+      const key = `${activeMember().id}:${detail.dataset.chapterPanel}`;
+      if (detail.open) {
+        openChapterIds.add(key);
+      } else {
+        openChapterIds.delete(key);
+      }
+    }, true);
+
     chapters.addEventListener("click", event => {
       const member = activeMember();
       const deleteTask = event.target.closest("[data-delete-task]");
@@ -2470,7 +2536,7 @@ shota 平岩しょうた
     }
     if ("serviceWorker" in navigator && location.protocol !== "file:") {
       window.addEventListener("load", () => {
-        navigator.serviceWorker.register("./sw.js").catch(() => {});
+        navigator.serviceWorker.register("./sw.js").then(registration => registration.update()).catch(() => {});
       });
     }
   </script>
