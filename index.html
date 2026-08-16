@@ -117,6 +117,16 @@
       min-height: 18px;
     }
 
+    .security-note {
+      padding: 12px;
+      border-radius: 7px;
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
     .sidebar {
       background: var(--nav);
       color: #f8fafc;
@@ -978,6 +988,27 @@
     </form>
   </section>
 
+  <section id="adminGate" class="access-gate" hidden>
+    <form id="adminForm" class="access-card">
+      <div class="brand" style="padding:0;color:var(--text)">
+        <div class="mark">管</div>
+        <div>
+          <strong>管理者ログイン</strong>
+          <span>Admin Progress Dashboard</span>
+        </div>
+      </div>
+      <h1>進捗管理を見る</h1>
+      <p>管理人だけが全サロン生の進捗率、完了タスク数、章ごとの状況を確認できます。</p>
+      <div class="field">
+        <label for="adminPassword">管理パスワード</label>
+        <input id="adminPassword" type="password" autocomplete="current-password" placeholder="管理パスワード">
+      </div>
+      <button class="primary" type="submit">管理画面を開く</button>
+      <div class="security-note">通常URLではこの画面は表示されません。管理者URLからアクセスした場合のみログイン画面を表示します。</div>
+      <div id="adminError" class="access-error"></div>
+    </form>
+  </section>
+
   <div id="personalApp" class="app personal-mode" hidden>
     <aside class="sidebar" hidden>
       <div class="brand">
@@ -1069,10 +1100,13 @@
   <script>
     const STORAGE_KEY = "salon-progress-board-v1";
     const PERSONAL_MEMBER_KEY = "salon-progress-personal-member-v1";
+    const ADMIN_SESSION_KEY = "salon-progress-admin-session-v1";
+    const ADMIN_PASSWORD_HASH = "0fb126646cd48c05514d47b1bf38ae6dedb5807f5678507d8f4bf6db2e46c6ee";
     const colors = ["#2f6fed", "#14946f", "#c98211", "#9b5de5", "#d14f3f"];
     let overviewSort = "progress";
     let openOverviewMemberId = "";
     let openChapterId = "";
+    let isAdminMode = false;
 
     const salonMemberNames = `
 愛 樋口愛美いくみ
@@ -1508,10 +1542,18 @@ shota 平岩しょうた
     const chapterSelect = $("#chapterSelect");
     const toast = $("#toast");
     const accessGate = $("#accessGate");
+    const adminGate = $("#adminGate");
     const personalApp = $("#personalApp");
     const accessForm = $("#accessForm");
     const accessName = $("#accessName");
     const accessError = $("#accessError");
+    const adminForm = $("#adminForm");
+    const adminPassword = $("#adminPassword");
+    const adminError = $("#adminError");
+    const appTitle = $(".topbar h1");
+    const appLead = $(".topbar .lead");
+    const sidebar = $(".sidebar");
+    const overviewPanel = $(".overview");
 
     function clone(value) {
       return JSON.parse(JSON.stringify(value));
@@ -1525,14 +1567,60 @@ shota 平岩しょうた
       return String(value || "").normalize("NFKC").toLowerCase().replace(/\s+/g, "");
     }
 
+    async function sha256(value) {
+      const bytes = new TextEncoder().encode(value);
+      const hashBuffer = await crypto.subtle.digest("SHA-256", bytes);
+      return Array.from(new Uint8Array(hashBuffer)).map(byte => byte.toString(16).padStart(2, "0")).join("");
+    }
+
+    function openAdminPage() {
+      isAdminMode = true;
+      accessGate.hidden = true;
+      adminGate.hidden = true;
+      personalApp.hidden = false;
+      personalApp.classList.remove("personal-mode");
+      sidebar.hidden = false;
+      overviewPanel.hidden = false;
+      appTitle.textContent = "管理者用 進捗管理";
+      appLead.textContent = "全サロン生の進捗率、完了タスク、章ごとの状況を確認できます。進捗率が高い順に並びます。";
+      $("#switchMemberButton").textContent = "管理画面を閉じる";
+      render();
+    }
+
+    function showPersonalGate() {
+      isAdminMode = false;
+      personalApp.hidden = true;
+      adminGate.hidden = true;
+      accessGate.hidden = false;
+      accessName.value = "";
+      accessName.focus();
+    }
+
+    function showAdminGate() {
+      isAdminMode = false;
+      personalApp.hidden = true;
+      accessGate.hidden = true;
+      adminGate.hidden = false;
+      adminPassword.value = "";
+      adminPassword.focus();
+    }
+
     function openPersonalPage(memberId) {
       const member = state.members.find(item => item.id === memberId);
       if (!member) return false;
+      isAdminMode = false;
       state.activeMemberId = member.id;
       openChapterId = "";
       localStorage.setItem(PERSONAL_MEMBER_KEY, member.id);
       accessGate.hidden = true;
+      adminGate.hidden = true;
       personalApp.hidden = false;
+      personalApp.classList.add("personal-mode");
+      sidebar.hidden = true;
+      overviewPanel.hidden = true;
+      appTitle.textContent = "あなたの進捗ページ";
+      appLead.textContent = "自分の章別タスクと完了率だけを確認できます。完了した項目にチェックを入れて進めてください。";
+      $("#switchMemberButton").textContent = "別の名前で開く";
       render();
       return true;
     }
@@ -2157,6 +2245,23 @@ shota 平岩しょうた
     }
 
     function renderStats() {
+      if (isAdminMode) {
+        const members = state.members;
+        const memberCount = members.length;
+        const progresses = members.map(member => completion(member));
+        const average = memberCount ? Math.round(progresses.reduce((sum, progress) => sum + progress.percent, 0) / memberCount) : 0;
+        const completedMembers = progresses.filter(progress => progress.percent === 100).length;
+        const needsFollow = members.filter(member => completion(member).percent < 30 || dueClass(nextDue(member)) === "late").length;
+
+        stats.innerHTML = `
+          <div class="stat"><span>サロン生数</span><strong>${memberCount}人</strong></div>
+          <div class="stat"><span>平均消化率</span><strong>${average}%</strong></div>
+          <div class="stat"><span>完了者</span><strong>${completedMembers}人</strong></div>
+          <div class="stat"><span>要対応</span><strong>${needsFollow}人</strong></div>
+        `;
+        return;
+      }
+
       const member = activeMember();
       const progress = completion(member);
       const chapterCount = member.chapters.length;
@@ -2388,11 +2493,31 @@ shota 平岩しょうた
     });
 
     $("#switchMemberButton").addEventListener("click", () => {
+      if (isAdminMode) {
+        sessionStorage.removeItem(ADMIN_SESSION_KEY);
+        history.replaceState(null, "", location.pathname);
+        showPersonalGate();
+        return;
+      }
       localStorage.removeItem(PERSONAL_MEMBER_KEY);
-      personalApp.hidden = true;
-      accessGate.hidden = false;
-      accessName.value = "";
-      accessName.focus();
+      showPersonalGate();
+    });
+
+    adminForm.addEventListener("submit", async event => {
+      event.preventDefault();
+      adminError.textContent = "";
+      const password = adminPassword.value.trim();
+      if (!password) {
+        adminError.textContent = "管理パスワードを入力してください。";
+        return;
+      }
+      const hash = await sha256(password);
+      if (hash !== ADMIN_PASSWORD_HASH) {
+        adminError.textContent = "管理パスワードが違います。";
+        return;
+      }
+      sessionStorage.setItem(ADMIN_SESSION_KEY, "1");
+      openAdminPage();
     });
 
     $("#sortByProgress").addEventListener("click", () => {
@@ -2536,12 +2661,17 @@ shota 平岩しょうた
       render();
     });
 
+    const isAdminUrl = new URLSearchParams(location.search).get("admin") === "1";
+    const hasAdminSession = sessionStorage.getItem(ADMIN_SESSION_KEY) === "1";
     const savedPersonalMemberId = localStorage.getItem(PERSONAL_MEMBER_KEY);
-    if (savedPersonalMemberId && openPersonalPage(savedPersonalMemberId)) {
+    if (isAdminUrl && hasAdminSession) {
+      openAdminPage();
+    } else if (isAdminUrl) {
+      showAdminGate();
+    } else if (savedPersonalMemberId && openPersonalPage(savedPersonalMemberId)) {
       accessGate.hidden = true;
     } else {
-      personalApp.hidden = true;
-      accessGate.hidden = false;
+      showPersonalGate();
     }
     if ("serviceWorker" in navigator && location.protocol !== "file:") {
       window.addEventListener("load", () => {
@@ -2551,7 +2681,7 @@ shota 平岩しょうた
 
     if ("caches" in window) {
       caches.keys().then(keys => {
-        keys.filter(key => key.startsWith("salon-progress-") && key !== "salon-progress-v22").forEach(key => caches.delete(key));
+        keys.filter(key => key.startsWith("salon-progress-") && key !== "salon-progress-v23").forEach(key => caches.delete(key));
       }).catch(() => {});
     }
   </script>
