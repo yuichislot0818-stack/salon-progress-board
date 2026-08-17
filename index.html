@@ -1875,12 +1875,12 @@ shota 平岩しょうた
         id: "c4",
         title: "4章 転売",
         description: "予約・抽選グループで抽選を受け、ロレックス抽選やレビュー案件、3UPラボへの参加を進めましょう。",
-        tasks: makeTaskList("resale", [
-          "予約・抽選グループで抽選を受ける",
-          "ロレックスの抽選を受ける",
-          "レビュー案件に参加する",
-          "3UPラボに参加する"
-        ])
+        tasks: [
+          { id: "resale_t1", title: "予約・抽選グループで抽選を受ける", done: false, due: "" },
+          { id: "resale_t2", title: "ロレックスの抽選を受ける", done: false, due: "", video: "videos/rolex-lottery.mp4", detail: "ロレックス抽選の流れを動画で確認してから進めましょう。見終わったらチェックを入れてください。", featureHint: "タップしてロレックス抽選動画を開く" },
+          { id: "resale_t3", title: "レビュー案件に参加する", done: false, due: "" },
+          { id: "resale_t4", title: "3UPラボに参加する", done: false, due: "" }
+        ]
       };
     }
 
